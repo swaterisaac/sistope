@@ -1,5 +1,5 @@
 import random as rnd
-largoLineas = 64
+largoLineas = 60
 
 def randomizadorADN():
     var = rnd.randint(1,4)
