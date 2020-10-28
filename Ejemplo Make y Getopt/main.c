@@ -11,22 +11,17 @@ struct matriz{
 
 
 
-//Por defecto, cursorX y cursorY deberían ser 0.
-matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas){
+
+matriz leerAtributos(char* nombreArchivo){
 	int i = 0;
-	int cont  = 0;
 
 	int largoCadena = 60;
-	//int cantLineas = 30;
+	int cantLineas = 30;
 
 	FILE* archivo = fopen(nombreArchivo,"r");
 	//Si el archivo no existe:
 	if(archivo == NULL){
 		printf("No existe tal archivo.\n");
-		exit(1);
-	}
-	if(cursorX > largoCadena){
-		printf("Cursor incorrecto.\n");
 		exit(1);
 	}
 
@@ -37,53 +32,28 @@ matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas)
 	char relativo[70];
 	char** matrizM = (char**)malloc(sizeof(char*)*30);
 
-	/*
 	#ifdef __linux__
 	fgets(relativo,70,archivo);
 	#endif
-	*/
 
-	for(int cont = 0; cont < cursorY; cont++){
-		fgets(relativo,(largoCadena+10), archivo);
-	}
-
-	while(!feof(archivo) || i == -1){//Mientras no llegue al final del archivo.
+	while(!feof(archivo)){//Mientras no llegue al final del archivo.
 		aux = '0';
-		cont++;
 		fgets(relativo,70,archivo);
 		//fgetc(archivo);
-		char* linea = (char*)malloc(sizeof(char)*largoCadena);
-		//////////////////////////////////////////////////////////////////
-		if(i == 0){
-			for(int j = 0; j < cursorX;j++){
-				linea[j] = aux;
-			}
-			for(int j = cursorX; aux != '\0';j++){
-				aux = relativo[j];
-				linea[j] = aux;
-			}
-		}
+		char* linea = (char*)malloc(sizeof(char)*60);
+		for(int j = 0; aux != '\0';j++){
 
-		else{
-			for(int j = 0; aux != '\0';j++){
-				aux = relativo[j];
+			aux = relativo[j];
 		
-				if(aux != '\n'){
-					linea[j] = aux;
-				}
-				else{
-					aux == '\0';
-				}
-			}	
+			if(aux != '\n'){
+				linea[j] = aux;
+			}
+			else{
+				aux == '\0';
+			}
 		}
 		matrizM[i] = linea;
 		i++;
-		if(i == cantLineas){
-			i = -1;
-		}
-	}
-	if(cantLineas > cont){
-		cantLineas = cont;
 	}
 
 	fclose(archivo);
@@ -104,7 +74,8 @@ void imprimirMatriz(matriz matrizC){
 
 }
 int main(){
-	matriz matriz1 = leerAtributos("ejemploGenerado.txt",10,25,2);
+	char* nombreArchivo;
+	matriz matriz1 = leerAtributos("ejemploGenerado.txt");
 	imprimirMatriz(matriz1);
 	return 0;
 }
