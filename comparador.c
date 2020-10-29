@@ -1,9 +1,12 @@
+//Importación de bibliotecas
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> 
 #include <unistd.h>
 
-
+/*Estructura que permite almacenar el contenido del archivo (completo o una porción del archivo), 
+por medio de una matriz, la cantidad 
+de lineas que posee la porción de archivo y el largo de las cadenas*/
 struct matriz{
 	int cantLineas;
 	int largoCadena;
@@ -11,8 +14,12 @@ struct matriz{
 }typedef matriz;
 
 
-
 //Por defecto, cursorX y cursorY deberían ser 0.
+/*
+Función que permite almcenar en un struct matriz  el contenido dea una porción de archivo
+ENTRADAS: el nombre del archivo a leer, la posición del cursor en coordenadas x e y, la cantidad de líneas que se desean leer
+SALIDA: un struct matriz.
+*/
 matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas){
 	int i = 0;
 	int cont  = 0;
@@ -92,7 +99,7 @@ matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas)
 	if(cantLineas > cont){
 		cantLineas = cont;
 	}
-
+	//Cierre del archivo
 	fclose(archivo);
 	matriz matrizRetorno;
 	matrizRetorno.matrizC = matrizM;
@@ -101,11 +108,22 @@ matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas)
 	return matrizRetorno;
 }
 
+/*
+Función que permite leer el archivo completo, considerando que el cursor comienza en las coordenada (x,y)=(0,0)
+ENTRADAS: el nombre del archivo a leer, y la cantidad de líneas del archivo
+SALIDA: invoca a la función leerAtributos, por lo que retorna un struct matriz con todo el contenido del archivo
+*/
 matriz leerArchCompleto(char* nombreArchivo, int cantLineas){
 	return leerAtributos(nombreArchivo,0,0,cantLineas);
 }
 
+/*
+Función que permite verificar si una cadena está contenida en la línea de una porción de archivo
+ENTRADA: struct matriz que corresponde a la porción de archivo, la línea del texto donde se desea buscar la cadena y la cadena a buscar
+SALIDA: 1 si la cadena está contenida en la línea, o 0 si no está
+*/
 int compararLinea(matriz textoArchivo,int linea,char* cadenaComparar){
+	//El largo de la cadena debe ser igual a 4
 	if(strlen(cadenaComparar) != 4){
 		printf("La cadena a comparar es incorrecta.\n");
 		exit(1);
@@ -119,6 +137,7 @@ int compararLinea(matriz textoArchivo,int linea,char* cadenaComparar){
 	}
 	return 0;
 }
+
 
 matriz separarTexto(matriz textoArchivo,int cursorX,int cursorY,int cantLineas){
 	if(textoArchivo.cantLineas - cursorY < cantLineas || textoArchivo.largoCadena < cursorX || textoArchivo.cantLineas < cursorY){
@@ -150,6 +169,11 @@ matriz separarTexto(matriz textoArchivo,int cursorX,int cursorY,int cantLineas){
 
 }
 
+/*
+Función que permite transformar un entero a un string "SI" o "NO"
+ENTRADA: un entero, el cual debe ser 1 o 0
+SALIDA: un string. "SI" si el entero ingresado es 1, o "NO" si el entero ingresado es 0
+*/
 char* transformarBool(int boolR){
 	if(boolR == 1){
 		return "SI";
@@ -162,6 +186,7 @@ char* transformarBool(int boolR){
 		exit(1);
 	}
 }
+
 
 void escribirArchivo(matriz lectura,char* cadena){
 	char nombreArchivo[40];
@@ -210,8 +235,10 @@ void imprimirMatriz2(matriz matrizC){
 int main(){
 	//matriz matriz1 = leerAtributos("ejemploGenerado.txt",10,25,2);
 	matriz matriz1 = leerArchCompleto("ejemploGenerado.txt",30);
-	matriz matriz2 = separarTexto(matriz1,0,29,1);
+	matriz matriz2 = separarTexto(matriz1,6,29,1);
+	//printf("Imprimiendo matriz 1:\n");
 	//imprimirMatriz2(matriz1);
+	//printf("Imprimiendo matriz 2:\n");
 	//imprimirMatriz(matriz2);
 	//printf("%d\n", compararLinea(matriz2,0,"TTAA"));
 	escribirArchivo(matriz1,"AAAA");
