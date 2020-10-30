@@ -27,14 +27,20 @@ void imprimirPaquete(empaquetado paquete){
 	return;
 }
 
-//Todos los procesos van a ser equitativos excepto el último, quién se va a llevar ese trabajo más lo que sobre por hacer.
+//Todos los procesos van a ser equitativos excepto el último, quien se va a llevar ese trabajo más lo que sobre por hacer.
 //En el caso de que sea perfectamente divisible, todos los procesos harán el mismo trabajo. (ya que cantLineas % numeroDeProcesos = 0)
+//descripción: permite separar el trabajo que se le asigna a cada proceso creado.
+//entradas: la cantidad de procesos a crear, y la cantidad de líneas que posee el archivo.
+//salida: un arreglo que contiene el trabajo que se le asiganará a cada proceso.
 int* separarTrabajo(int numeroDeProcesos, int cantLineas){
 	int* resultado = (int*)malloc(sizeof(int)*2);
 	resultado[0] = cantLineas / numeroDeProcesos;
+	//si la división no es entera, aquí queda almacenado la cantidad de líneas que debe trabajar el último proceso
 	resultado[1] = (cantLineas / numeroDeProcesos) + (cantLineas % numeroDeProcesos);
 	return resultado;
 }
+
+
 
 int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArchivo,char* cadenaBuscar){
 	int* arregloPID = (int*)malloc(sizeof(int)* numeroDeProcesos);
@@ -110,6 +116,10 @@ int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArc
 	return arregloPID;
 }
 
+
+//descripción: permite codificar el nombre de los archivos de salida de cada proceso, según lo solicitado por enunciado.
+//entrada: el identificador del proceso, y la cadena a buscar.
+//salida: un string que representa el nombre del archivo de salida de un determinado proceso.
 char* codificarNombreLeer(int PID,char* cadenaBuscar){
 	char nombreArchivo[40];
 	char aux[6];
