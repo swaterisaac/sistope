@@ -1,3 +1,4 @@
+//Importación de bibliotecas
 #include <unistd.h> //Para utilizar fork(), pipes(), entre otros
 #include <stdio.h> //Funciones de entrada y salida como printf
 #include <stdlib.h> //Asignación de memoria, atoi, etc.
@@ -41,7 +42,10 @@ int* separarTrabajo(int numeroDeProcesos, int cantLineas){
 }
 
 
-
+//descripción: crea los n procesos para que cada uno realice el trabajo que le corresponde.
+//entradas: la cantidad de procesos a crear, la cantidad de líneas totales del archivo de entrada,
+// el nombre del archivo de entrada,y la cadena a buscar.
+//salida: entrega un arreglo de enteros, con los PID de los procesos.
 int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArchivo,char* cadenaBuscar){
 	int* arregloPID = (int*)malloc(sizeof(int)* numeroDeProcesos);
 	int* trabajoSeparado = separarTrabajo(numeroDeProcesos,cantLineas);
@@ -136,6 +140,9 @@ char* codificarNombreLeer(int PID,char* cadenaBuscar){
 	return nombreFinal;
 }
 
+//descripción: permite unir todos los archivos generados por cada proceso.
+//entradas: el arreglo que contiene los PID de los procesos, la cadena a buscar, y la cantidad de procesos.
+//salida: como es void, sólo se escribe en el archivo.
 void juntarArchivo(int* arregloPID,char* cadenaBuscar,int cantidadProcesos){
 	char nombreArchivoSalida[40];
 	strcpy(nombreArchivoSalida,"rc_");
@@ -150,7 +157,6 @@ void juntarArchivo(int* arregloPID,char* cadenaBuscar,int cantidadProcesos){
 			fprintf(arch,"%c",auxiliar);
 			auxiliar = fgetc(archAux);
 		}
-		//fflush(archAux);
 		fclose(archAux);
 
 	}

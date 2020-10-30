@@ -21,12 +21,9 @@ struct empaquetado{
 	int flag;
 }typedef empaquetado;
 
-//Por defecto, cursorX y cursorY deberían ser 0.
-/*
-Función que permite almcenar en un struct matriz  el contenido dea una porción de archivo
-ENTRADAS: el nombre del archivo a leer, la posición del cursor en coordenadas x e y, la cantidad de líneas que se desean leer
-SALIDA: un struct matriz.
-*/
+//descripción: permite almacenar en un struct matriz  el contenido de una porción de archivo.
+//entradas: el nombre del archivo a leer, la posición del cursor en coordenadas x e y, la cantidad de líneas que se desean leer
+//salida: un struct matriz que representa el contenido de una porción de archivo.
 matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas){
 	int i = 0;
 	int cont  = 0;
@@ -103,19 +100,17 @@ matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas)
 }
 
 /*
-Función que permite leer el archivo completo, considerando que el cursor comienza en las coordenada (x,y)=(0,0)
-ENTRADAS: el nombre del archivo a leer, y la cantidad de líneas del archivo
-SALIDA: invoca a la función leerAtributos, por lo que retorna un struct matriz con todo el contenido del archivo
-*/
+//descripción: permite leer el archivo completo, considerando que el cursor comienza en las coordenada (x,y)=(0,0)
+//entrada: el nombre del archivo a leer, y la cantidad de líneas del archivo
+//salida: invoca a la función leerAtributos, por lo que retorna un struct matriz con todo el contenido del archivo
 matriz leerArchCompleto(char* nombreArchivo, int cantLineas){
 	return leerAtributos(nombreArchivo,0,0,cantLineas);
-}
+}*/
 
-/*
-Función que permite verificar si una cadena está contenida en la línea de una porción de archivo
-ENTRADA: struct matriz que corresponde a la porción de archivo, la línea del texto donde se desea buscar la cadena y la cadena a buscar
-SALIDA: 1 si la cadena está contenida en la línea, o 0 si no está
-*/
+
+//descripción: permite verificar si una cadena está contenida en la línea de una porción de archivo.
+//entrada: struct matriz que corresponde a la porción de archivo, la línea del texto donde se desea buscar la cadena y la cadena a buscar.
+//salida: 1 si la cadena está contenida en la línea, o 0 si no está.
 int compararLinea(matriz textoArchivo,int linea,char* cadenaComparar){
 	//El largo de la cadena debe ser igual a 4
 	if(strlen(cadenaComparar) != 4){
@@ -132,8 +127,8 @@ int compararLinea(matriz textoArchivo,int linea,char* cadenaComparar){
 	return 0;
 }
 
-
-matriz separarTexto(matriz textoArchivo,int cursorX,int cursorY,int cantLineas){
+//Función usada para debugguear
+/*matriz separarTexto(matriz textoArchivo,int cursorX,int cursorY,int cantLineas){
 	if(textoArchivo.cantLineas - cursorY < cantLineas || textoArchivo.largoCadena < cursorX || textoArchivo.cantLineas < cursorY){
 		printf("La cantidad de lineas o el cursor ingresado son incorrectos.\n");
 		exit(1);
@@ -161,13 +156,11 @@ matriz separarTexto(matriz textoArchivo,int cursorX,int cursorY,int cantLineas){
 	textoRetorno.largoCadena = textoArchivo.largoCadena;
 	return textoRetorno;
 
-}
+}*/
 
-/*
-Función que permite transformar un entero a un string "SI" o "NO"
-ENTRADA: un entero, el cual debe ser 1 o 0
-SALIDA: un string. "SI" si el entero ingresado es 1, o "NO" si el entero ingresado es 0
-*/
+//descripción: permite transformar un entero a un string "SI" o "NO".
+//entrada: un entero, el cual debe ser 1 o 0
+//salida: un string. "SI" si el entero ingresado es 1, o "NO" si el entero ingresado es 0
 char* transformarBool(int boolR){
 	if(boolR == 1){
 		return "SI";
@@ -181,7 +174,11 @@ char* transformarBool(int boolR){
 	}
 }
 
-
+//descripción: permite escribir en el archivo las líneas que fueron asignadas a un determinado proceso, 
+//además de indicar si se encontró o no la cadena en cada línea.
+//entradas: la porción de archivo a escribir, la cadena que fue buscada en esa porción de archivo, 
+//y el flag para indicar si se desea imprimir el resultado por pantalla o no.
+//salida: como es void, sólo se escribe en el archivo de salida.
 void escribirArchivo(matriz lectura,char* cadena,int flag){
 	char nombreArchivo[40];
 	char PID[10];
@@ -254,6 +251,10 @@ void escribirArchivo(matriz lectura,char* cadena,int flag){
 	return;
 }
 
+
+//descripción: 
+//entrada:
+//salida:
 void imprimirMatriz(matriz matrizC){
 	for(int i = 0; i < matrizC.cantLineas;i++){
 		for(int j = 0; j < matrizC.largoCadena;j++){
