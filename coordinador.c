@@ -147,8 +147,11 @@ void juntarArchivo(int* arregloPID,char* cadenaBuscar,int cantidadProcesos){
 		FILE* archAux = fopen(codificarNombreLeer(arregloPID[i],cadenaBuscar),"r");
 
 		while(auxiliar != EOF){
+			if(auxiliar!='0'){
+				fprintf(arch,"%c",auxiliar);
+			}
 			auxiliar = fgetc(archAux);
-			fprintf(arch,"%c",auxiliar);
+			
 		}
 		printf("-------->%c<-------------\n",auxiliar);
 		auxiliar = '0';
@@ -171,7 +174,7 @@ int main(){
 	int flag;
 
 	numeroDeProcesos = 5;
-	cantLineas = 20;
+	cantLineas = 30;
 	flag = 1;
 	strcpy(nombreArchivo,"ejemploGenerado.txt");
 	strcpy(cadenaBuscar,"AAAA");
