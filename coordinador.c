@@ -145,17 +145,11 @@ void juntarArchivo(int* arregloPID,char* cadenaBuscar,int cantidadProcesos){
 	char auxiliar = '0';
 	for(int i = 0;i < cantidadProcesos;i++){
 		FILE* archAux = fopen(codificarNombreLeer(arregloPID[i],cadenaBuscar),"r");
-
+		auxiliar = fgetc(archAux);
 		while(auxiliar != EOF){
-			if(auxiliar!='0'){
-				fprintf(arch,"%c",auxiliar);
-			}
+			fprintf(arch,"%c",auxiliar);
 			auxiliar = fgetc(archAux);
-			
 		}
-		printf("-------->%c<-------------\n",auxiliar);
-		auxiliar = '0';
-		fgetc(archAux);
 		//fflush(archAux);
 		fclose(archAux);
 
