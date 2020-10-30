@@ -13,6 +13,13 @@ struct matriz{
 	char** matrizC;
 }typedef matriz;
 
+struct empaquetado{
+	char nombreArchivo[40];
+	int cantidadLineasLeer;
+	int cursorY;
+	char cadenaComparar[5];
+	int flag;
+}typedef empaquetado;
 
 //Por defecto, cursorX y cursorY deberían ser 0.
 /*
@@ -55,41 +62,28 @@ matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas)
 		fgets(relativo,(largoCadena+10), archivo);
 	}
 
-	while(!feof(archivo) || i == -1){//Mientras no llegue al final del archivo.
+	while(!feof(archivo) && i != -1){//Mientras no llegue al final del archivo.
 		aux = '0';
 		cont++;
 		fgets(relativo,70,archivo);
 		//fgetc(archivo);
 		char* linea = (char*)malloc(sizeof(char)*largoCadena);
 		//////////////////////////////////////////////////////////////////
-		if(i == 0){
-			for(int j = 0; j < cursorX;j++){
-				linea[j] = aux;
+		for(int j = 0; j < cursorX;j++){
+			linea[j] = aux;
+		}
+		for(int j = cursorX; aux != '\0' || j < largoCadena;j++){
+			aux = relativo[j];
+			if(aux != '\n'){
+				linea[j] = aux;	
 			}
-			for(int j = cursorX; aux != '\0' || j < largoCadena;j++){
-				aux = relativo[j];
-				if(aux != '\n'){
-					linea[j] = aux;	
-				}
-				else{
-					aux = '\0';
-				}
+			else{
+				aux = '\0';
+				linea[j] = '\n';
 			}
 		}
+		cursorX = 0;
 
-		else{
-			for(int j = 0; aux != '\0' || j < largoCadena;j++){
-				aux = relativo[j];
-		
-				if(aux != '\n'){
-					linea[j] = aux;
-				}
-				else{
-					linea[j] = '\n';
-					aux = '\0';
-				}
-			}	
-		}
 		matrizM[i] = linea;
 		i++;
 		if(i == cantLineas){
@@ -188,11 +182,12 @@ char* transformarBool(int boolR){
 }
 
 
-void escribirArchivo(matriz lectura,char* cadena){
+void escribirArchivo(matriz lectura,char* cadena,int flag){
 	char nombreArchivo[40];
 	char PID[10];
 	
 	sprintf(PID,"%d",(int)getpid());
+	//printf("%s\n",PID);
 
 	strcpy(nombreArchivo,"rp_");
 	strcat(nombreArchivo, cadena);
@@ -201,19 +196,61 @@ void escribirArchivo(matriz lectura,char* cadena){
 	strcat(nombreArchivo,".txt");
 
 	FILE* arch = fopen(nombreArchivo,"w");
+	//char** matrizRetorno = (char**)malloc(sizeof(char*)*lectura.cantLineas);
+
+	/*
 	for(int i = 0; i < lectura.cantLineas;i++){
 		//strcpy(lineaRel,lectura.matrizC[i]);
-		char* lineaRel = (char*)malloc(sizeof(char)*lectura.largoCadena);
+
+		//char* lineaRel = (char*)malloc(sizeof(char)*(lectura.largoCadena + 6));
+		char lineaRel[70];
+		strcpy(lineaRel,"");
 		for(int j = 0;j < lectura.largoCadena;j++){
 			lineaRel[j] = lectura.matrizC[i][j];
 		}
+
 		strcat(lineaRel, "  ");
+
 		strcat(lineaRel, transformarBool(compararLinea(lectura,i,cadena)));
+
 		strcat(lineaRel,"\n");
+
+		if(flag){
+			printf("%s",lineaRel);
+		}
+		
+		//printf("%d\n",lectura.cantLineas);
 		fputs(lineaRel,arch);
-		//strcat("\n");
+		
+		/*for(int j = 0; j < (lectura.largoCadena + 5); j++){
+			fprintf(arch,"%c",lineaRel[j]);
+		}
+
+		//matrizRetorno[i] = lineaRel;
+	}
+	*/
+	for(int i = 0; i < lectura.cantLineas;i++){
+		for(int j = 0; j < lectura.largoCadena;j++){
+			if(flag){
+				printf("%c",lectura.matrizC[i][j]);
+			}
+			fprintf(arch,"%c",lectura.matrizC[i][j]);
+		}
+		char aux[3];
+		strcpy(aux,transformarBool(compararLinea(lectura,i,cadena)));
+		if(flag){
+			printf("  %s\n",aux);	
+		}
+		fprintf(arch,"  %s\n",aux);
+
 	}
 	fclose(arch);
+	/*
+	matriz matrizRetornoX;
+	matrizRetornoX.matrizC = matrizRetorno;
+	matrizRetornoX.cantLineas = lectura.cantLineas;
+	matrizRetornoX.largoCadena = lectura.largoCadena + 4;
+	*/
 	return;
 }
 
@@ -224,23 +261,82 @@ void imprimirMatriz(matriz matrizC){
 		}
 		printf("\n");
 	}
-
 }
+
 void imprimirMatriz2(matriz matrizC){
 	for(int i = 0; i < matrizC.cantLineas;i++){
 		printf("%s",matrizC.matrizC[i]);
 		//printf("\n");
 	}
 }
+
+void imprimirPaquete(empaquetado paquete){
+	printf("Nombre del archivo: %s\n",paquete.nombreArchivo);
+	printf("Cantidad de lineas a leer: %d\n",paquete.cantidadLineasLeer);
+	printf("Linea de donde empieza: %d\n",paquete.cursorY);
+	printf("Cadena a comparar: %s\n",paquete.cadenaComparar);
+	printf("Bandera: %d\n",paquete.flag);
+	return;
+}
+
 int main(){
+	//Parámetros que va a recibir del coordinador:
+	char nombreArchivo[40];
+	int cantidadLineasLeer, cursorY;
+	char cadenaComparar[5];
+	int flag;
+
+	empaquetado paqueteRel;
+	read(STDIN_FILENO, &paqueteRel, sizeof(empaquetado));
+	
+	strcpy(nombreArchivo, paqueteRel.nombreArchivo);
+	cantidadLineasLeer = paqueteRel.cantidadLineasLeer;
+	strcpy(cadenaComparar, paqueteRel.cadenaComparar);
+	flag = paqueteRel.flag;
+	cursorY = paqueteRel.cursorY;
+
+
+	//imprimirPaquete(paqueteRel);
+
+	/*
+	strcpy(nombreArchivo,"ejemploGenerado.txt"); 
+	strcpy(cadenaComparar,"TAAT");
+	cantidadLineasLeer = 4;
+	cursorY = 0;
+	flag = 1;
+	*/
+
+
+	matriz matriz1 = leerAtributos(nombreArchivo,0,cursorY,cantidadLineasLeer);
+	//imprimirPaquete(paqueteRel);
+	//imprimirMatriz(matriz1);
+
+	//¿Se imprime esta sección de código?
+	/*if(flag = 1){
+		escribirArchivo(matriz1,cadenaComparar);
+		imprimirMatriz(matrizImprimir);
+		exit(1);
+	}
+	else{
+		escribirArchivo(matriz1,cadenaComparar);
+	}*/
+
+	escribirArchivo(matriz1,cadenaComparar,flag);
+	return 0;
+}
+
+
+
+
+
+
+
 	//matriz matriz1 = leerAtributos("ejemploGenerado.txt",10,25,2);
-	matriz matriz1 = leerArchCompleto("ejemploGenerado.txt",30);
-	matriz matriz2 = separarTexto(matriz1,6,29,1);
+	//matriz matriz1 = leerArchCompleto("ejemploGenerado.txt",30);
+	//matriz matriz2 = separarTexto(matriz1,6,29,1);
 	//printf("Imprimiendo matriz 1:\n");
-	//imprimirMatriz2(matriz1);
+	//imprimirMatriz(matriz1);
 	//printf("Imprimiendo matriz 2:\n");
 	//imprimirMatriz(matriz2);
 	//printf("%d\n", compararLinea(matriz2,0,"TTAA"));
-	escribirArchivo(matriz1,"AAAA");
-	return 0;
-}
+	//escribirArchivo(matriz1,"AAAA");
