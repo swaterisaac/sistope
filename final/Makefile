@@ -32,7 +32,7 @@ $(depends) : $(salida_source) $(salida_headers)
 
 
 clean :
-	$(RM) $(salida_out) $(salida_objects) $(zipfile) $(depends)
+	$(RM) $(salida_out) $(salida_objects) $(zipfile) $(depends) $(child_process)
 
 .PHONY : build zip clean
 

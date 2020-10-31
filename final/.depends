@@ -1,2 +1,0 @@
-funciones.o: funciones.c
-coordinador.o: coordinador.c Estructuras.h funciones.h
