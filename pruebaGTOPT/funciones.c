@@ -15,7 +15,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	int flags, opt;
 	char *aux3;
 	aux3 = malloc(10*sizeof(char));
-	if(argc <6){//si se ingresa un numero de argumentos menor a 6, se finaliza la ejecucion del programa
+	if(argc <9){//si se ingresa un numero de argumentos menor a 6, se finaliza la ejecucion del programa
 		//Debe ser 6, porque el nombre del programa se considera como un argumento
 		printf("Se ingreso un numero incorrecto de argumentos\n");
 		fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
@@ -30,7 +30,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	//el caracter correspondiente a la opcion/entrada que se quiere recibir y además se debe indicar si dicha entrada estará acompañada de algún valor
 	//Esto se indica con ":". Por lo tanto, "i:" quiere decir que se espera recibir la opcion -i y esta si o si debe estar acompañada de un valor
 	//En cambio, la opcion "-d" no necesita estar acompañada de un valor
-	while((opt = getopt(argc, argv, "di:n:c:p:")) != -1) { 
+	while((opt = getopt(argc, argv, "di:n:c:p:")) != -1 ){ 
 	   //opt recibe el argumento leido (se hace de forma secuencial) y se ingresa a un switch
 	   //En caso de que opt sea -1, se dejaran de buscar entradas y por lo tanto se podrá salir del while
 	   switch(opt) {
@@ -40,6 +40,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	   case 'i': //se busca la entrada -i
 			*nombreArchivo= optarg;
 		   if(optarg!=0 && strcmp(*nombreArchivo,"")==0){//si no se ingresa un argumento junto a -i o si no se logra parsear el argumento ingresado, se considera como invalido
+				printf("error con nombre\n");
 				fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
 				   argv[0]);
 				exit(EXIT_FAILURE);
@@ -61,9 +62,10 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 				exit(EXIT_FAILURE);
 			   }
 		   break;
-       case 'p': //se busca la entrada -h
+       case 'p': //se busca la entrada -P
 			*cadena=optarg;
-		   if(optarg!=0 && strcmp(*cadena,"")==0){//si no se ingresa un argumento junto a -p o si no se logra parsear el argumento ingresado, se considera como invalido
+		   if(optarg!=0 && (strlen(*cadena)<4) ){//si no se ingresa un argumento junto a -p o si no se logra parsear el argumento ingresado, se considera como invalido
+				printf("error con cadena\n");
 				fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
 				   argv[0]);
 				exit(EXIT_FAILURE);
@@ -82,7 +84,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	(*numeroProcesos) = N; //se iguala la variable numeroProcesos a N, para poder acceder al valor en el main
     (*cantidadLineas) = N2; //se iguala la variable cantidadLineas a N2, para poder acceder al valor en el main
 	if(N<=0){
-		printf("El valor que acompaña a -n debe ser un mayor a 0\n");
+		printf("El valor que acompaña a -n debe ser un mayor a 0\n: %d",N);
 		fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
 				   argv[0]);
 		exit(EXIT_FAILURE);

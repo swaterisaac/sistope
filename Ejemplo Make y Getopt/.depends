@@ -1,0 +1,2 @@
+funciones.o: funciones.c Signal.h Shared.h
+main.o: main.c
