@@ -5,18 +5,12 @@
 #include <string.h> 
 #include <sys/wait.h> //Define las constantes simbólicas para usar con waitpid(), wait() por ejemplo
 #include <sys/types.h> //define varios tipos de datos como pid_t
+#include "Estructuras.h"
+#include "funciones.h"
 
 #define LECTURA 0
 #define ESCRITURA 1
 
-//Empaquetado de la información que se manda a través del PIPE
-struct empaquetado{
-	char nombreArchivo[40];
-	int cantidadLineasLeer;
-	int cursorY;
-	char cadenaComparar[5];
-	int flag;
-}typedef empaquetado;
 
 
 void imprimirPaquete(empaquetado paquete){
@@ -62,7 +56,6 @@ int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArc
 	int bkPoint = 0;
 	int status;
 	empaquetado paquete1;
-	
 
 	char* argumentos[2] = {"./Comp", NULL};
 
@@ -74,7 +67,6 @@ int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArc
 		//int *pipesGeneral = (int*)malloc(sizeof(int)*2);
 		pipe(pipesGeneral);
 		pidRel = fork();
-		
 		if(pidRel > 0){ //Proceso padre
 			//Armamos el paquete para el hijo		
 
@@ -90,12 +82,10 @@ int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArc
 			paquete1.cursorY = posInicio;
 			paquete1.flag = flag;
 
-			//imprimirPaquete(paquete1);
 
 			//Se lo comunica a través de pipe
 
 			close(pipesGeneral[LECTURA]);
-			//printf("XD %d\n",i);
 			write(pipesGeneral[ESCRITURA], &paquete1, sizeof(empaquetado));
 			
 
@@ -117,6 +107,7 @@ int* crearNProcesos(int numeroDeProcesos,int cantLineas,int flag,char* nombreArc
 			exit(1);
 		}
 	}
+	//printf("termina funcion crear proceso");
 	return arregloPID;
 }
 
@@ -165,9 +156,9 @@ void juntarArchivo(int* arregloPID,char* cadenaBuscar,int cantidadProcesos){
 	return;
 }
 //int argc, char* argv[]
-int main(){
+int main(int argc, char *argv[]){
 	//Atributos a recibir por el getOpt:
-	char nombreArchivo[40];
+	/*char nombreArchivo[40];
 	char cadenaBuscar[5];
 	int numeroDeProcesos;
 	int cantLineas;
@@ -183,5 +174,21 @@ int main(){
 
 	arregloPID = crearNProcesos(numeroDeProcesos,cantLineas,flag,nombreArchivo,cadenaBuscar);
 	juntarArchivo(arregloPID,cadenaBuscar,numeroDeProcesos);
-	return 0;
+	return 0;*/
+
+	int numeroProcesos = 0, cantidadLineas = 0, flag = 0;
+    char *nombreArchivo, *cadena;
+	recibirArgumentos(argc, argv, &nombreArchivo, &numeroProcesos, &cantidadLineas, &cadena, &flag );
+	if(flag==1){
+		printf("Se utilizo flag -d\n");
+		}
+    printf("El argumento de flag -i es: %s\n", nombreArchivo);
+    printf("El argumento de flag -n es: %d\n", numeroProcesos);
+    printf("El argumento de flag -c es: %d\n", cantidadLineas);
+    printf("El argumento de flag -p es: %s\n", cadena);
+    int* arregloPID = (int*)malloc(sizeof(int)*numeroProcesos);
+	arregloPID = crearNProcesos(numeroProcesos,cantidadLineas,flag,nombreArchivo,cadena);
+
+	juntarArchivo(arregloPID,cadena,numeroProcesos);
+    return 0;
 }

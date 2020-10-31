@@ -15,7 +15,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	int flags, opt;
 	char *aux3;
 	aux3 = malloc(10*sizeof(char));
-	if(argc <9){//si se ingresa un numero de argumentos menor a 6, se finaliza la ejecucion del programa
+	if(argc < 9 || argc > 10){//si se ingresa un numero de argumentos menor a 6, se finaliza la ejecucion del programa
 		//Debe ser 6, porque el nombre del programa se considera como un argumento
 		printf("Se ingreso un numero incorrecto de argumentos\n");
 		fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
