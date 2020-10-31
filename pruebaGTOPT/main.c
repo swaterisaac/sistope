@@ -8,7 +8,7 @@ int main(int argc, char *argv[]){
 
 	int numeroProcesos = 0, cantidadLineas = 0, flag = 0;
     char *nombreArchivo= NULL, *cadena= NULL;
-	recibirArgumentos(argc, argv, nombreArchivo, &numeroProcesos, &cantidadLineas, cadena, &flag );
+	recibirArgumentos(argc, argv, &nombreArchivo, &numeroProcesos, &cantidadLineas, &cadena, &flag );
 	if(flag==1){
 		printf("Se utilizo flag -d\n");
 		}
