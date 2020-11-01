@@ -6,8 +6,8 @@
 #include "Estructuras.h"
 
 
-//descripción: permite almacenar en un struct matriz  el contenido de una porción de archivo.
-//entradas: el nombre del archivo a leer, la posición del cursor en coordenadas x e y, la cantidad de líneas que se desean leer
+//descripción: permite almacenar los datos de una porción de archivo, en un struct matriz.
+//entradas: el nombre del archivo a leer, la posición del cursor en coordenadas x e y, la cantidad de líneas que se desean leer.
 //salida: un struct matriz que representa el contenido de una porción de archivo.
 matriz leerAtributos(char* nombreArchivo,int cursorX,int cursorY,int cantLineas){
 	int i = 0;
@@ -144,8 +144,8 @@ int compararLinea(matriz textoArchivo,int linea,char* cadenaComparar){
 }*/
 
 //descripción: permite transformar un entero a un string "SI" o "NO".
-//entrada: un entero, el cual debe ser 1 o 0
-//salida: un string. "SI" si el entero ingresado es 1, o "NO" si el entero ingresado es 0
+//entrada: un entero, el cual debe ser 1 o 0.
+//salida: un string. "SI" si el entero ingresado es 1, o "NO" si el entero ingresado es 0.
 char* transformarBool(int boolR){
 	if(boolR == 1){
 		return "SI";
@@ -199,9 +199,9 @@ void escribirArchivo(matriz lectura,char* cadena,int flag){
 }
 
 
-//descripción: 
-//entrada:
-//salida:
+//descripción: muestra por pantalla el contenido de una matriz.
+//entrada: un struct matriz.
+//salida: void, imprime por pantalla.
 void imprimirMatriz(matriz matrizC){
 	for(int i = 0; i < matrizC.cantLineas;i++){
 		for(int j = 0; j < matrizC.largoCadena;j++){

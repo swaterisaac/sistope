@@ -5,7 +5,9 @@
 //#include "Signal.h"
 //#include "Shared.h"
 
-
+//descripción: imprime un mensaje de error por pantalla.
+//entrada: arreglo con las entradas ingresadas.
+//salida: imprime por pantalla.
 void imprimirError(char *argv[]){
 	fprintf(stderr, "Uso correcto: %s \n[-i string: Nombre del archivo]\n[-n numero entero: Cantidad de procesos]"
 	"\n[-c numero entero: Cantidad de lineas a leer]\n[-p string: Cadena a buscar]\n[-d: Bandera para mostrar resultados en pantalla]\n",
@@ -13,6 +15,9 @@ void imprimirError(char *argv[]){
 	return;
 }
 
+//descripción:verifica que una secuencia de ADN sea válida.
+//entrada: un string que representa la secuencia.
+//salida: un entero. 1 si la secuencia es válida, o 0 si no lo es. 
 int verificarADN(char* string){
 	int max = strlen(string);
 	for(int i = 0; i < max;i++){
@@ -23,19 +28,18 @@ int verificarADN(char* string){
 	return 1;
 }
 
+//descripción: permite ingresar argumentos desde la línea de comandos.
 //Entradas: Recibe 
 //argc: que consiste en el contador de argumentos ingresados en la linea de comandos. El nombre del programa que se ejecuta se cuenta como un argumento
 //argv: arreglo con las entradas ingresadas por linea de comandos
-//*nombreArchivo, *numeroProcesos, *cantidadLineas, *cadena y *flag: punteros a variables que se utilizaran para pasar valores por referencia
-//Funcionamiento:
-//Salida: No posee retorno, ya que es una función void
+//**nombreArchivo, *numeroProcesos, *cantidadLineas, *cadena y *flag: punteros a variables que se utilizaran para pasar valores por referencia
+//Salida: No posee retorno, ya que es una función void.
 void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numeroProcesos, int *cantidadLineas, char **cadena, int *flag ){
 	int flags, opt;
 	char *aux3;
 	aux3 = malloc(10*sizeof(char));
-	if(argc < 9 || argc > 10){//si se ingresa un numero de argumentos menor a 6, se finaliza la ejecucion del programa
-		//Debe ser 6, porque el nombre del programa se considera como un argumento
-		printf("Se ingreso un numero incorrecto de argumentos.\n");
+	if(argc < 9 || argc > 10){//si se ingresa un numero de argumentos menor a 9 o mayor a 10, se finaliza la ejecución del programa
+		printf("Se ingresoó un número incorrecto de argumentos.\n");
 		imprimirError(argv);
 		exit(EXIT_FAILURE);
 	}
@@ -64,7 +68,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 		   break;
        case 'n': //se busca la entrada -n
 		   N = strtol(optarg, &aux3, 10);//se parsea el argumento ingresado junto al flag -n a entero
-		   if(optarg!=0 && N<=0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
+		   if(optarg!=0 && N<=0){//si no se ingresa un argumento junto a -n o si no se logra parsear el argumento ingresado, se considera como invalido
 				imprimirError(argv);
 				exit(EXIT_FAILURE);
 			   }

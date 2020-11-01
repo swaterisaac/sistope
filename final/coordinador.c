@@ -12,7 +12,9 @@
 #define ESCRITURA 1
 
 
-
+//descripción: muestra por pantalla los datos de un struct empaquetado.
+//entrada: un struct empaquetado.
+//salida: imprime por pantalla.
 void imprimirPaquete(empaquetado paquete){
 	printf("Nombre del archivo: %s\n",paquete.nombreArchivo);
 	printf("Cantidad de lineas a leer: %d\n",paquete.cantidadLineasLeer);
@@ -190,20 +192,21 @@ int main(int argc, char *argv[]){
     //Se reciben atributos por el getOPT
 	recibirArgumentos(argc, argv, &nombreArchivo, &numeroProcesos, &cantidadLineas, &cadena, &flag );
 
-	if(flag == 1){
+	/*if(flag == 1){
 		printf("Se utilizo flag -d\n");
 	}
 
     printf("El argumento de flag -i es: %s\n", nombreArchivo);
     printf("El argumento de flag -n es: %d\n", numeroProcesos);
     printf("El argumento de flag -c es: %d\n", cantidadLineas);
-    printf("El argumento de flag -p es: %s\n", cadena);
-
+    printf("El argumento de flag -p es: %s\n", cadena);*/
+	
     validarArchivo(nombreArchivo,cantidadLineas);
 
     int* arregloPID = (int*)malloc(sizeof(int)*numeroProcesos);
 	arregloPID = crearNProcesos(numeroProcesos,cantidadLineas,flag,nombreArchivo,cadena);
 
 	juntarArchivo(arregloPID,cadena,numeroProcesos);
+	printf("\nPrograma finalizado\n");
     return 0;
 }
