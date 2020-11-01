@@ -155,37 +155,52 @@ void juntarArchivo(int* arregloPID,char* cadenaBuscar,int cantidadProcesos){
 
 	return;
 }
+
+/*
+Descripción: Función que detiene la ejecución del programa en el caso que el nombre del archivo o la cantidad de lineas ingresadas
+sea incorrecto.
+Entradas: String indicando el nombre del archivo, entero indicando la cantidad de lineas a leer.
+Salidas: void
+*/
+
+void validarArchivo(char* nombreArchivo, int cantidadLineas){
+	FILE * arch = fopen(nombreArchivo,"r");
+    if(arch == NULL){
+    	printf("No existe el archivo %s en esta carpeta.\n",nombreArchivo);
+    	exit(1);
+    }
+    int cont = 0;
+    char relativo[100];
+    while(!feof(arch)){
+    	fgets(relativo,100,arch);
+    	cont++;
+    }
+    if(cantidadLineas > cont){
+    	printf("Has ingresado una cantidad de lineas mayor a las que tiene el archivo.\n");
+    	exit(1);
+    }
+    fclose(arch);
+    return;
+}
+
 //int argc, char* argv[]
 int main(int argc, char *argv[]){
-	//Atributos a recibir por el getOpt:
-	/*char nombreArchivo[40];
-	char cadenaBuscar[5];
-	int numeroDeProcesos;
-	int cantLineas;
-	int flag;
-
-	numeroDeProcesos = 5;
-	cantLineas = 30;
-	flag = 1;
-	strcpy(nombreArchivo,"ejemploGenerado.txt");
-	strcpy(cadenaBuscar,"AAAA");
-
-	int* arregloPID = (int*)malloc(sizeof(int)*numeroDeProcesos);
-
-	arregloPID = crearNProcesos(numeroDeProcesos,cantLineas,flag,nombreArchivo,cadenaBuscar);
-	juntarArchivo(arregloPID,cadenaBuscar,numeroDeProcesos);
-	return 0;*/
-
 	int numeroProcesos = 0, cantidadLineas = 0, flag = 0;
     char *nombreArchivo, *cadena;
+    //Se reciben atributos por el getOPT
 	recibirArgumentos(argc, argv, &nombreArchivo, &numeroProcesos, &cantidadLineas, &cadena, &flag );
-	if(flag==1){
+
+	if(flag == 1){
 		printf("Se utilizo flag -d\n");
-		}
+	}
+
     printf("El argumento de flag -i es: %s\n", nombreArchivo);
     printf("El argumento de flag -n es: %d\n", numeroProcesos);
     printf("El argumento de flag -c es: %d\n", cantidadLineas);
     printf("El argumento de flag -p es: %s\n", cadena);
+
+    validarArchivo(nombreArchivo,cantidadLineas);
+
     int* arregloPID = (int*)malloc(sizeof(int)*numeroProcesos);
 	arregloPID = crearNProcesos(numeroProcesos,cantidadLineas,flag,nombreArchivo,cadena);
 

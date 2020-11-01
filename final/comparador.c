@@ -195,12 +195,6 @@ void escribirArchivo(matriz lectura,char* cadena,int flag){
 
 	}
 	fclose(arch);
-	/*
-	matriz matrizRetornoX;
-	matrizRetornoX.matrizC = matrizRetorno;
-	matrizRetornoX.cantLineas = lectura.cantLineas;
-	matrizRetornoX.largoCadena = lectura.largoCadena + 4;
-	*/
 	return;
 }
 
@@ -214,13 +208,6 @@ void imprimirMatriz(matriz matrizC){
 			printf("%c",matrizC.matrizC[i][j]);
 		}
 		printf("\n");
-	}
-}
-
-void imprimirMatriz2(matriz matrizC){
-	for(int i = 0; i < matrizC.cantLineas;i++){
-		printf("%s",matrizC.matrizC[i]);
-		//printf("\n");
 	}
 }
 

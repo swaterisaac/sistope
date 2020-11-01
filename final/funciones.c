@@ -5,6 +5,24 @@
 //#include "Signal.h"
 //#include "Shared.h"
 
+
+void imprimirError(char *argv[]){
+	fprintf(stderr, "Uso correcto: %s \n[-i string: Nombre del archivo]\n[-n numero entero: Cantidad de procesos]"
+	"\n[-c numero entero: Cantidad de lineas a leer]\n[-p string: Cadena a buscar]\n[-d: Bandera para mostrar resultados en pantalla]\n",
+	argv[0]);
+	return;
+}
+
+int verificarADN(char* string){
+	int max = strlen(string);
+	for(int i = 0; i < max;i++){
+		if(!(string[i] == 'A' || string[i] == 'C' || string[i] == 'G' || string[i] == 'T')){
+			return 0;
+		}
+	}
+	return 1;
+}
+
 //Entradas: Recibe 
 //argc: que consiste en el contador de argumentos ingresados en la linea de comandos. El nombre del programa que se ejecuta se cuenta como un argumento
 //argv: arreglo con las entradas ingresadas por linea de comandos
@@ -17,10 +35,9 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	aux3 = malloc(10*sizeof(char));
 	if(argc < 9 || argc > 10){//si se ingresa un numero de argumentos menor a 6, se finaliza la ejecucion del programa
 		//Debe ser 6, porque el nombre del programa se considera como un argumento
-		printf("Se ingreso un numero incorrecto de argumentos\n");
-		fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
-		   exit(EXIT_FAILURE);
+		printf("Se ingreso un numero incorrecto de argumentos.\n");
+		imprimirError(argv);
+		exit(EXIT_FAILURE);
 	}
 	int N = -1;
     int N2 = -1;
@@ -40,40 +57,41 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
 	   case 'i': //se busca la entrada -i
 			*nombreArchivo= optarg;
 		   if(optarg!=0 && strcmp(*nombreArchivo,"")==0){//si no se ingresa un argumento junto a -i o si no se logra parsear el argumento ingresado, se considera como invalido
-				printf("error con nombre\n");
-				fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+				printf("Error de formato\n");
+				imprimirError(argv);
 				exit(EXIT_FAILURE);
 		   }
 		   break;
        case 'n': //se busca la entrada -n
 		   N = strtol(optarg, &aux3, 10);//se parsea el argumento ingresado junto al flag -n a entero
 		   if(optarg!=0 && N<=0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
-				fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+				imprimirError(argv);
 				exit(EXIT_FAILURE);
 			   }
 		   break;
        case 'c': //se busca la entrada -c
 		   N2 = strtol(optarg, &aux3, 10);//se parsea el argumento ingresado junto al flag -h a entero
 		   if(optarg!=0 && N2 <=0){//si no se ingresa un argumento junto a -c o si no se logra parsear el argumento ingresado, se considera como invalido
-				fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+				imprimirError(argv);
 				exit(EXIT_FAILURE);
 			   }
 		   break;
        case 'p': //se busca la entrada -P
 			*cadena=optarg;
-		   if(optarg!=0 && (strlen(*cadena)<4) ){//si no se ingresa un argumento junto a -p o si no se logra parsear el argumento ingresado, se considera como invalido
-				printf("error con cadena\n");
-				fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+			
+			if(optarg != 0 && (strlen(*cadena) != 4)){//si no se ingresa un argumento junto a -p o si no se logra parsear el argumento ingresado, se considera como invalido
+				printf("El largo de la cadena debe ser de 4.\n");
+				imprimirError(argv);
 				exit(EXIT_FAILURE);
-			   }
+			}
+			else if(verificarADN(*cadena) == 0){
+				printf("La cadena debe contener solo A,C,G o T (mayúsculas)\n");
+				imprimirError(argv);
+				exit(EXIT_FAILURE);
+			}
 		   break;
 	   default: /* '?' */
-		   fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+		   imprimirError(argv);
 		   exit(EXIT_FAILURE);
 	   }
 	}
@@ -85,14 +103,12 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, int *numero
     (*cantidadLineas) = N2; //se iguala la variable cantidadLineas a N2, para poder acceder al valor en el main
 	if(N<=0){
 		printf("El valor que acompaña a -n debe ser un mayor a 0\n: %d",N);
-		fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+		imprimirError(argv);
 		exit(EXIT_FAILURE);
 		}
     if(N2<=0){
 		printf("El valor que acompaña a -c debe ser un mayor a 0\n");
-		fprintf(stderr, "Uso correcto: %s [-i string] [-n numero entero] [-c numero entero] [-p string] [-d]\n",
-				   argv[0]);
+		imprimirError(argv);
 		exit(EXIT_FAILURE);
 		}
 }
