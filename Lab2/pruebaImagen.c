@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned char fileMarker1;                                                                                                                                                                                              
@@ -38,7 +39,7 @@ typedef struct bin {
 }bin;
 
 typedef struct histograma {
-  int *arregloBin;
+  bin *arregloBin;
   int largo;
 }histograma;
 
@@ -47,7 +48,16 @@ typedef struct matrizPixel{
   int alturaIMG;
 }MP;
 
+typedef struct matrizGris{
+  int** matriz;
+  int alturaIMG;
+}MG;
+
+
+//Variables globales
 MP imagen;
+
+
 
 
 void cargarImagen(char *filename )
@@ -84,12 +94,33 @@ void cargarImagen(char *filename )
   return;
 }
 
+int comprobarNum(int num){
+  if(num == 2){
+    return 1;
+  }
+  else if(num == 0 || num == 1){
+    return 0;
+  }
+  comprobarNum(num/2);
+}
+
+int potencia(int num1,int num2){
+  if(num1 == 1){
+    return 1;
+  }
+  if(num2 == 0){
+    return 1;
+  }
+  return num1*potencia(num1,num2-1);
+}
+
+void calcularDivision(int niveles){
+  int altura = imagen.alturaIMG;
+  int cuadrantes = potencia(4,niveles);
+  
+}
+
 int main()
 {
   LoadBMP("negro.bmp");
 }
-
-
-
-
-
