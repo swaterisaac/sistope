@@ -3,13 +3,21 @@
 #include <pthread.h>
 #include <stdint.h>
 
-struct porcionImg{
+typedef struct porcionImg{
     int** matriz;
     int orden;
-}typedef porcionImg;
+}porcionImg;
 
 //void* f(void* img){
-    
+
+typedef struct quadTree{
+    int nivel;
+    porcionImg *imagen;
+    struct quadTree *cuadrante1;
+    struct quadTree *cuadrante2;
+    struct quadTree *cuadrante3;
+    struct quadTree *cuadrante4;
+}quadTree;
 
 int global, niveles, contador=0;
 porcionImg *imagenOriginal;
@@ -102,21 +110,84 @@ porcionImg* cuadrante4(porcionImg* img){
 }
 void* funcion(void *img){
 
-    printf("\nAquí se encarga de calcular el histograma para este cuadrante: \n");
+    printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
     imprimirMatriz(img);
 }
 
 void* generadoraHebras(void *img){
+    //printf("aaaa\n");
     pthread_t h1;
     pthread_t h2;
     pthread_t h3;
     pthread_t h4;
-    void *resultadoCuad1;
-    void *resultadoCuad2;
-    void *resultadoCuad3;
-    void *resultadoCuad4;
 
-    void *status1;
+    void *status;
+
+    quadTree* tree=(quadTree*)img;
+    //La imagen se divide en los 4 cuadrantes y aumenta el nivel
+    tree->cuadrante1=(quadTree*)malloc(sizeof(quadTree));
+    tree->cuadrante1->imagen=cuadrante1(tree->imagen);
+    //printf("\nCUADRANTE 1\n");
+    //imprimirMatriz(tree->cuadrante1->imagen);
+    tree->cuadrante1->nivel=tree->nivel+1;
+
+    tree->cuadrante2=(quadTree*)malloc(sizeof(quadTree));
+    tree->cuadrante2->imagen=cuadrante2(tree->imagen);
+    //printf("\nCUADRANTE 2\n");
+    //imprimirMatriz(tree->cuadrante2->imagen);
+    tree->cuadrante2->nivel=tree->nivel+1;
+
+    tree->cuadrante3=(quadTree*)malloc(sizeof(quadTree));
+    tree->cuadrante3->imagen=cuadrante3(tree->imagen);
+    //printf("\nCUADRANTE 3\n");
+    //imprimirMatriz(tree->cuadrante3->imagen);
+    tree->cuadrante3->nivel=tree->nivel+1;
+
+    tree->cuadrante4=(quadTree*)malloc(sizeof(quadTree));
+    tree->cuadrante4->imagen=cuadrante4(tree->imagen);
+    //printf("\nCUADRANTE 4\n");
+    //imprimirMatriz(tree->cuadrante4->imagen);
+    tree->cuadrante4->nivel=tree->nivel+1;
+
+    /*printf("\nValor del nivel cuadrante 1: %d", tree->cuadrante1->nivel);
+    printf("\nValor del nivel cuadrante 2: %d", tree->cuadrante2->nivel);
+    printf("\nValor del nivel cuadrante 3: %d", tree->cuadrante3->nivel);
+    printf("\nValor del nivel cuadrante 4: %d", tree->cuadrante4->nivel);*/
+
+    //Si los cuadrantes no están en el nivel máximo de descomposición, entonces se generan 4 hebras por cada cuadrante.
+    //Recordar que la función generadora de Hebras de por sí genera 4 hebras, y es por ello que cada hebra invoca a esta función de manera recursiva.
+    if (tree->cuadrante1->nivel!=niveles && tree->cuadrante2->nivel!=niveles 
+    && tree->cuadrante3->nivel!=niveles && tree->cuadrante4->nivel!=niveles){
+        //printf("\n entra al if?");
+        pthread_create(&h1,NULL,generadoraHebras,tree->cuadrante1);
+        pthread_join(h1,&status);
+
+        pthread_create(&h2,NULL,generadoraHebras,tree->cuadrante2);
+        pthread_join(h2,&status);
+
+        pthread_create(&h3,NULL,generadoraHebras,tree->cuadrante3);
+        pthread_join(h3,&status);
+
+        pthread_create(&h4,NULL,generadoraHebras,tree->cuadrante4);
+        pthread_join(h4,&status);
+
+    }
+    else
+    {
+        printf("\n \nENTRANDO AL ELSE?\n");
+        pthread_create(&h1,NULL,funcion,tree->cuadrante1->imagen);
+        pthread_join(h1,&status);
+        pthread_create(&h2,NULL,funcion,tree->cuadrante2->imagen);
+        pthread_join(h2,&status);
+        pthread_create(&h3,NULL,funcion,tree->cuadrante3->imagen);
+        pthread_join(h3,&status);
+        pthread_create(&h4,NULL,funcion,tree->cuadrante4->imagen);
+        pthread_join(h4,&status);
+    }
+    
+
+
+    /*void *status1;
     void *status2;
     contador++;
     printf("\nVALOR DEL CONTADOR: %d",contador);
@@ -125,7 +196,7 @@ void* generadoraHebras(void *img){
     porcionImg* nuevaImg1=(porcionImg*)malloc(sizeof(porcionImg));
     nuevaImg1=cuadrante1(img);
     printf("\nValor del cuadrante 1 en nivel: %d\n",contador);
-    imprimirMatriz(nuevaImg1);
+    imprimirMatriz(nuevaImg1);*/
 
     /*printf("\nCreando cuadrante dos\n");
     porcionImg* nuevaImg2=(porcionImg*)malloc(sizeof(porcionImg));
@@ -146,7 +217,7 @@ void* generadoraHebras(void *img){
     imprimirMatriz(nuevaImg4);*/
 
     //Aquí se pregunta si el contador el igual al valor de niveles, si lo es entonces hacer el trabajo, sino generar 4 hebras para esta hebra.
-    if(contador==niveles){
+    /*if(contador==niveles){
         pthread_create(&h1, NULL, funcion, (void *) nuevaImg1);
         pthread_join(h1,&resultadoCuad1);
     }
@@ -154,7 +225,7 @@ void* generadoraHebras(void *img){
         pthread_create(&h1, NULL, generadoraHebras, (void *) nuevaImg1);
         //imprimirMatriz(nuevaImg1);
         pthread_join(h1,&status1);
-    }
+    }*/
 
     
     /*printf("\n\n\n PASANDO A CUADRANTE 2\n\n\n");
@@ -207,14 +278,25 @@ void* generadoraHebras(void *img){
 int main(){
 	pthread_t h1;
     int altura = 8;
+    //niveles está como variable global
     niveles=2;
     //porcionImg* img = crearImg(altura);
+    //En el primer nivel se tendría la imagen original, es decir, sin dvidirla por cuadrantes.
+    //imagenOriginal está como variable global.
     imagenOriginal = crearImg(altura);
+    quadTree* main=(quadTree*)malloc(sizeof(quadTree));
+    main->nivel=0;
+    main->imagen=imagenOriginal;
+    main->cuadrante1=NULL;
+    main->cuadrante2=NULL;
+    main->cuadrante3=NULL;
+    main->cuadrante4=NULL;
+    
     imprimirMatriz(imagenOriginal);
 	void *resultadoFinal;
     printf("\nNiveles: %d",niveles);
 
-	pthread_create(&h1, NULL, generadoraHebras, (void *) imagenOriginal);
+	pthread_create(&h1, NULL, generadoraHebras, (void *) main);
     pthread_join(h1,&resultadoFinal);
 	return 0;
 }
