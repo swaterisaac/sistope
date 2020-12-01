@@ -34,6 +34,7 @@ typedef struct __attribute__((__packed__)){
   unsigned char r;
 }pixel;
 */
+
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned char fileMarker1;                                                                                                                                                                                              
     unsigned char fileMarker2;                                                                                                                                                                                               
@@ -63,6 +64,16 @@ typedef struct __attribute__((__packed__)) {
     unsigned char  r;                                                                                                                                                                                                                        
 } pixel;
 
+typedef struct bin {
+  int inferior;
+  int superior;
+  int valorI;
+}bin;
+
+typedef struct histograma {
+  int *arregloBin;
+  int largo;
+}histograma;
 
 void TextDisplay(bmpInfoHeader *info, unsigned char *img)
 {
