@@ -11,7 +11,8 @@ struct porcionImg{
 //void* f(void* img){
     
 
-int global, niveles=3;
+int global, niveles, contador=0;
+porcionImg *imagenOriginal;
 
 void imprimirMatriz(porcionImg* img){
     for(int i = 0; i < img->orden;i++){
@@ -100,32 +101,84 @@ porcionImg* cuadrante4(porcionImg* img){
     return nuevaImg;
 }
 void* funcion(void *img){
+
+    printf("\nAquí se encarga de calcular el histograma para este cuadrante: \n");
     imprimirMatriz(img);
 }
 
 void* generadoraHebras(void *img){
+    pthread_t h1;
     pthread_t h2;
     pthread_t h3;
     pthread_t h4;
-    pthread_t h5;
     void *resultadoCuad1;
     void *resultadoCuad2;
     void *resultadoCuad3;
     void *resultadoCuad4;
 
+    void *status1;
+    void *status2;
+    contador++;
+    printf("\nVALOR DEL CONTADOR: %d",contador);
+
     printf("\nCreando cuadrante uno\n");
     porcionImg* nuevaImg1=(porcionImg*)malloc(sizeof(porcionImg));
     nuevaImg1=cuadrante1(img);
-    pthread_create(&h2, NULL, funcion, (void *) nuevaImg1);
-    pthread_join(h2,&resultadoCuad1);
+    printf("\nValor del cuadrante 1 en nivel: %d\n",contador);
+    imprimirMatriz(nuevaImg1);
 
+    /*printf("\nCreando cuadrante dos\n");
+    porcionImg* nuevaImg2=(porcionImg*)malloc(sizeof(porcionImg));
+    nuevaImg2=cuadrante2(img);
+    printf("\nValor del cuadrante 2 en nivel: %d\n",contador);
+    imprimirMatriz(nuevaImg2);
+
+    printf("\nCreando cuadrante tres\n");
+    porcionImg* nuevaImg3=(porcionImg*)malloc(sizeof(porcionImg));
+    nuevaImg3=cuadrante3(img);
+    printf("\nValor del cuadrante 3 en nivel: %d\n",contador);
+    imprimirMatriz(nuevaImg3);
+
+    printf("\nCreando cuadrante cuatro\n");
+    porcionImg* nuevaImg4=(porcionImg*)malloc(sizeof(porcionImg));
+    nuevaImg4=cuadrante4(img);
+    printf("\nValor del cuadrante 4 en nivel: %d\n",contador);
+    imprimirMatriz(nuevaImg4);*/
+
+    //Aquí se pregunta si el contador el igual al valor de niveles, si lo es entonces hacer el trabajo, sino generar 4 hebras para esta hebra.
+    if(contador==niveles){
+        pthread_create(&h1, NULL, funcion, (void *) nuevaImg1);
+        pthread_join(h1,&resultadoCuad1);
+    }
+    else{
+        pthread_create(&h1, NULL, generadoraHebras, (void *) nuevaImg1);
+        //imprimirMatriz(nuevaImg1);
+        pthread_join(h1,&status1);
+    }
+
+    
+    /*printf("\n\n\n PASANDO A CUADRANTE 2\n\n\n");
     printf("\nCreando cuadrante dos\n");
     porcionImg* nuevaImg2=(porcionImg*)malloc(sizeof(porcionImg));
     nuevaImg2=cuadrante2(img);
-    pthread_create(&h3, NULL, funcion, (void *) nuevaImg2);
-    pthread_join(h3,&resultadoCuad2);
+    printf("\nValor del cuadrante 2 en nivel: %d\n",contador);
+    imprimirMatriz(nuevaImg2);
+    //Aquí se pregunta si el contador el igual al valor de niveles, si lo es entonces hacer el trabajo, sino generar 4 hebras para esta hebra.
+    if(contador==niveles){
+        pthread_create(&h2, NULL, funcion, (void *) nuevaImg2);
+        pthread_join(h2,&resultadoCuad2);
+    }
+    else{
+        pthread_create(&h2, NULL, generadoraHebras, (void *) nuevaImg2);
+        //imprimirMatriz(nuevaImg1);
+        pthread_join(h2,&status2);
+    }*/
 
-    printf("\nCreando cuadrante tres\n");
+
+    /*pthread_create(&h3, NULL, funcion, (void *) nuevaImg2);
+    pthread_join(h3,&resultadoCuad2);*/
+
+    /*printf("\nCreando cuadrante tres\n");
     porcionImg* nuevaImg3=(porcionImg*)malloc(sizeof(porcionImg));
     nuevaImg3=cuadrante3(img);
     pthread_create(&h4, NULL, funcion, (void *) nuevaImg3);
@@ -135,7 +188,7 @@ void* generadoraHebras(void *img){
     porcionImg* nuevaImg4=(porcionImg*)malloc(sizeof(porcionImg));
     nuevaImg4=cuadrante4(img);
     pthread_create(&h5, NULL, funcion, (void *) nuevaImg4);
-    pthread_join(h5,&resultadoCuad4);
+    pthread_join(h5,&resultadoCuad4);*/
 
 
     //Se llaman a los cuadrantes y se almacena memoria para 4 nuevas img.
@@ -148,13 +201,20 @@ void* generadoraHebras(void *img){
 
 }
 
+
+
+
 int main(){
 	pthread_t h1;
-
-    int altura = 4;
-    porcionImg* img = crearImg(altura);
+    int altura = 8;
+    niveles=2;
+    //porcionImg* img = crearImg(altura);
+    imagenOriginal = crearImg(altura);
+    imprimirMatriz(imagenOriginal);
 	void *resultadoFinal;
-	pthread_create(&h1, NULL, generadoraHebras, (void *) img);
+    printf("\nNiveles: %d",niveles);
+
+	pthread_create(&h1, NULL, generadoraHebras, (void *) imagenOriginal);
     pthread_join(h1,&resultadoFinal);
 	return 0;
 }
