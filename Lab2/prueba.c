@@ -480,7 +480,7 @@ int main(int argc, char *argv[]){
     
     matrizPixel* imagenOriginal= cargarImagen("imagen8.bmp");
     //niveles está como variable global
-    /*niveles=2;
+    niveles=2;
     //matrizPixel* img = crearImg(altura);
     //En el primer nivel se tendría la imagen original, es decir, sin dvidirla por cuadrantes.
     //imagenOriginal está como variable global.
@@ -498,7 +498,7 @@ int main(int argc, char *argv[]){
     printf("\nNiveles: %d",niveles);
 
 	pthread_create(&h1, NULL, generadoraHebras, (void *) main);
-    pthread_join(h1,&resultadoFinal);*/
+    pthread_join(h1,&resultadoFinal);
 
 
     /*int cantidadNiveles = 0, cantidadBins = 0;
