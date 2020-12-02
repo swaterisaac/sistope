@@ -55,14 +55,13 @@ typedef struct matrizGris{
 
 
 //Variables globales
-MP imagen;
+//MP imagen;
 
 
 
 
 void cargarImagen(char *filename )
 {
-
   FILE *f;
   bmpFileHeader header;
   unsigned char *imgdata;
@@ -71,30 +70,46 @@ void cargarImagen(char *filename )
 
   f = fopen (filename, "rb");
   if (!f){
-    return NULL;
+    printf("Error al abrir el archivo\n");
+    //return NULL;
   }
   
   fread(&header, sizeof(unsigned char), sizeof(bmpFileHeader), f);
   fread(&bInfoHeader, sizeof(unsigned char), sizeof(bmpInfoHeader), f);
   int largoImagen = bInfoHeader.width;
-  pixel** matrizPixel = (pixel**)malloc(sizeof(pixel*)*largoImagen);
+  printf("Largo de la imagen: %d",largoImagen);
+  /*pixel** matrizPixel = (pixel**)malloc(sizeof(pixel*)*largoImagen);
   for(int i = 0; i < largoImagen;i++){
     pixel* filaPixel = (pixel*)malloc(sizeof(pixel)*largoImagen);
     for(int j = 0;j < largoImagen;j++){
       fread(&filaPixel[j], 1,sizeof(pixel), f);
-      //printf("%d %d %d|",matrizPixel[i][j].r,matrizPixel[i][j].g,matrizPixel[i][j].b); //Para printear los píxeles (debug).
+      printf("%d %d %d|",matrizPixel[i][j].r,matrizPixel[i][j].g,matrizPixel[i][j].b); //Para printear los píxeles (debug).
     }
     matrizPixel[i] = filaPixel;
-    //printf("\n");
+    printf("\n");
+  }*/
+  
+  pixel** matrizPixel = (pixel**)malloc(sizeof(pixel*)*largoImagen);
+  for(int i=0;i<largoImagen;i++){
+    matrizPixel[i]=(pixel*)malloc(sizeof(pixel));
   }
-  imagen.matriz = matrizPixel;
-  imagen.alturaIMG = largoImagen;
+  for (int i=0;i<largoImagen;i++){
+    for(int j=0;j<largoImagen;j++){
+      fread(&matrizPixel[i][j],1,sizeof(pixel),f);
+      printf("%d %d %d|",matrizPixel[i][j].r,matrizPixel[i][j].g,matrizPixel[i][j].b); //Para printear los píxeles (debug).
+    }
+    printf("\n");
+  }
+
+
+  //imagen.matriz = matrizPixel;
+  //imagen.alturaIMG = largoImagen;
   //printf("TAMAÑO: %d x %d\n", bInfoHeader.height, bInfoHeader.width);
   fclose(f);
-  return;
+  //return;
 }
 
-int comprobarNum(int num){
+/*int comprobarNum(int num){
   if(num == 2){
     return 1;
   }
@@ -118,9 +133,11 @@ void calcularDivision(int niveles){
   int altura = imagen.alturaIMG;
   int cuadrantes = potencia(4,niveles);
   
-}
+}*/
 
 int main()
 {
-  LoadBMP("negro.bmp");
+
+  cargarImagen("imagen_rojo_negro.bmp");
+  
 }
