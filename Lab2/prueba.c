@@ -29,19 +29,24 @@ typedef struct __attribute__((__packed__)) {
     unsigned int   biClrImportant;                                                                                                                                                                                                           
 } bmpInfoHeader; 
 /////////////////////////////////////////////////////////////////////
+//Estructura que permite almacenar los atributos de un pixel, que son R,G y B
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned char  b;                                                                                                                                                                                                                        
     unsigned char  g;                                                                                                                                                                                                                        
     unsigned char  r;                                                                                                                                                                                                                        
 }pixel;
 /////////////////////////////////////////////////////////////////////
+//Estructura que permite almacenar una imagen, es decir, una matriz de pixeles,
+//el orden y el nivel en el cual está dicha imagen
 typedef struct matrizPixel{
     pixel** matriz;
     int orden;
     int nivel;  
 }matrizPixel;
 /////////////////////////////////////////////////////////////////////
-int global, niveles, contador=0;
+//Variables globales
+int niveles, bins;
+matrizPixel* imagenOriginal;
 /////////////////////////////////////////////////////////////////////
 
 void imprimirMatriz(matrizPixel* img){
@@ -54,6 +59,9 @@ void imprimirMatriz(matrizPixel* img){
     }
 }
 
+//descripción:
+//entrada:
+//salida:
 matrizPixel* cargarImagen(char *filename){
     FILE *f;
     bmpFileHeader header;
@@ -84,7 +92,7 @@ matrizPixel* cargarImagen(char *filename){
   
     pixel** matriz = (pixel**)malloc(sizeof(pixel*)*largoImagen);
     for(int i=0;i<largoImagen;i++){
-        matriz[i]=(pixel*)malloc(sizeof(pixel));
+        matriz[i]=(pixel*)malloc(sizeof(pixel)*largoImagen);
     }
     for (int i=0;i<largoImagen;i++){
         for(int j=0;j<largoImagen;j++){
@@ -116,7 +124,9 @@ matrizPixel* cargarImagen(char *filename){
     img->matriz = matriz;
     return img;
 }*/
-
+//descripción:
+//entrada:
+//salida:
 matrizPixel* cuadrante1(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
     nuevaImg->nivel = img -> nivel + 1;
@@ -182,13 +192,27 @@ matrizPixel* cuadrante4(matrizPixel* img){
     return nuevaImg;
 }
 void* funcion(void *img){
-
     printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
-    imprimirMatriz((matrizPixel*) img);
+    //Se tranforma la imagen a Matriz de Grises
+    matrizPixel* imagen = (matrizPixel*)img;
+    imprimirMatriz(imagen);
+    //printf("Orden de img: %d",imagen->orden);
+    float** matrizGris = (float **)malloc(sizeof(float*)*imagen->orden);
+    for(int i = 0; i<imagen->orden; i++){
+        matrizGris[i] = (float *)malloc(sizeof(float)*imagen->orden);
+    }
+
+    for(int i = 0; i < imagen->orden; i++){
+        for(int j = 0; j < imagen->orden; j++){
+            matrizGris[i][j] = imagen->matriz[i][j].r*0.3 + imagen->matriz[i][j].g*0.59 + imagen->matriz[i][j].b*0.11;
+            //printf("%d %d %d|",imagen->matriz[i][j].r,imagen->matriz[i][j].g,imagen->matriz[i][j].b);
+            printf("[%.2f] ",matrizGris[i][j]);
+        }
+        printf("\n");
+    }
 }
 
 void* generadoraHebras(void *img){
-    //printf("aaaa\n");
     pthread_t h1;
     pthread_t h2;
     pthread_t h3;
@@ -377,17 +401,17 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, char **sali
 
 int main(int argc, char *argv[]){
 	pthread_t h1;
-    int altura = 8;
     
-    matrizPixel* imagenOriginal= cargarImagen("imagen8.bmp");
+    imagenOriginal= cargarImagen("tresColores2.bmp");
+    //matrizPixel* imagenOriginal= cargarImagen("negro.bmp");
     //niveles está como variable global
-    niveles = 3;
+    niveles = 2;
     //matrizPixel* img = crearImg(altura);
     //En el primer nivel se tendría la imagen original, es decir, sin dvidirla por cuadrantes.
     //imagenOriginal está como variable global.
     //imagenOriginal = crearImg(altura);
     imagenOriginal -> nivel = 0;
-    imprimirMatriz(imagenOriginal);
+    //imprimirMatriz(imagenOriginal);
 
 	void *resultadoFinal;
     printf("\nNiveles: %d",niveles);
