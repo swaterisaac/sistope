@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 
+/////////////////////////////////////////////////////////////////////
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned char fileMarker1;                                                                                                                                                                                              
     unsigned char fileMarker2;                                                                                                                                                                                               
@@ -13,7 +14,7 @@ typedef struct __attribute__((__packed__)) {
     uint16_t unused2;                                                                                                                                                                                                                        
     unsigned int   imageDataOffset;                                                                                                                                                            
 } bmpFileHeader;                                                                                                                                                                                                                                
-
+/////////////////////////////////////////////////////////////////////
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned int   biSize;                                                                                                                                                                                                                   
     int            width;                                                                                                                                                                
@@ -27,28 +28,21 @@ typedef struct __attribute__((__packed__)) {
     unsigned int   biClrUsed;                                                                                                                                                                                                                
     unsigned int   biClrImportant;                                                                                                                                                                                                           
 } bmpInfoHeader; 
-
+/////////////////////////////////////////////////////////////////////
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned char  b;                                                                                                                                                                                                                        
     unsigned char  g;                                                                                                                                                                                                                        
     unsigned char  r;                                                                                                                                                                                                                        
 }pixel;
-
+/////////////////////////////////////////////////////////////////////
 typedef struct matrizPixel{
     pixel** matriz;
     int orden;
+    int nivel;  
 }matrizPixel;
-
-typedef struct quadTree{
-    int nivel;
-    matrizPixel *imagen;
-    struct quadTree *cuadrante1;
-    struct quadTree *cuadrante2;
-    struct quadTree *cuadrante3;
-    struct quadTree *cuadrante4;
-}quadTree;
-
+/////////////////////////////////////////////////////////////////////
 int global, niveles, contador=0;
+/////////////////////////////////////////////////////////////////////
 
 void imprimirMatriz(matrizPixel* img){
     for(int i = 0; i < img->orden;i++){
@@ -125,6 +119,7 @@ matrizPixel* cargarImagen(char *filename){
 
 matrizPixel* cuadrante1(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
+    nuevaImg->nivel = img -> nivel + 1;
     
     nuevaImg->orden=img->orden/2;
     nuevaImg->matriz=(pixel **)malloc(sizeof(pixel*)*nuevaImg->orden);
@@ -141,6 +136,7 @@ matrizPixel* cuadrante1(matrizPixel* img){
 
 matrizPixel* cuadrante2(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
+    nuevaImg->nivel = img -> nivel + 1;
     nuevaImg->orden=img->orden/2;
     nuevaImg->matriz=(pixel **)malloc(sizeof(pixel*)*nuevaImg->orden);
     for (int i=0; i< nuevaImg->orden; i++){
@@ -156,6 +152,7 @@ matrizPixel* cuadrante2(matrizPixel* img){
 
 matrizPixel* cuadrante3(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
+    nuevaImg->nivel = img -> nivel + 1;
     nuevaImg->orden=img->orden/2;
     nuevaImg->matriz=(pixel **)malloc(sizeof(pixel*)*nuevaImg->orden);
     for (int i=0; i< nuevaImg->orden; i++){
@@ -171,6 +168,7 @@ matrizPixel* cuadrante3(matrizPixel* img){
 
 matrizPixel* cuadrante4(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
+    nuevaImg->nivel = img -> nivel + 1;
     nuevaImg->orden=(img->orden)/2;
     nuevaImg->matriz=(pixel **)malloc(sizeof(pixel*)*nuevaImg->orden);
     for (int i=0; i< nuevaImg->orden; i++){
@@ -186,7 +184,7 @@ matrizPixel* cuadrante4(matrizPixel* img){
 void* funcion(void *img){
 
     printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
-    imprimirMatriz(img);
+    imprimirMatriz((matrizPixel*) img);
 }
 
 void* generadoraHebras(void *img){
@@ -196,154 +194,57 @@ void* generadoraHebras(void *img){
     pthread_t h3;
     pthread_t h4;
 
-    void *status;
+    void *status1,*status2,*status3,*status4;
 
-    quadTree* tree=(quadTree*)img;
-    //La imagen se divide en los 4 cuadrantes y aumenta el nivel
-    tree->cuadrante1=(quadTree*)malloc(sizeof(quadTree));
-    tree->cuadrante1->imagen=cuadrante1(tree->imagen);
-    //printf("\nCUADRANTE 1\n");
-    //imprimirMatriz(tree->cuadrante1->imagen);
-    tree->cuadrante1->nivel=tree->nivel+1;
-
-    tree->cuadrante2=(quadTree*)malloc(sizeof(quadTree));
-    tree->cuadrante2->imagen=cuadrante2(tree->imagen);
-    //printf("\nCUADRANTE 2\n");
-    //imprimirMatriz(tree->cuadrante2->imagen);
-    tree->cuadrante2->nivel=tree->nivel+1;
-
-    tree->cuadrante3=(quadTree*)malloc(sizeof(quadTree));
-    tree->cuadrante3->imagen=cuadrante3(tree->imagen);
-    //printf("\nCUADRANTE 3\n");
-    //imprimirMatriz(tree->cuadrante3->imagen);
-    tree->cuadrante3->nivel=tree->nivel+1;
-
-    tree->cuadrante4=(quadTree*)malloc(sizeof(quadTree));
-    tree->cuadrante4->imagen=cuadrante4(tree->imagen);
-    //printf("\nCUADRANTE 4\n");
-    //imprimirMatriz(tree->cuadrante4->imagen);
-    tree->cuadrante4->nivel=tree->nivel+1;
-
-    /*printf("\nValor del nivel cuadrante 1: %d", tree->cuadrante1->nivel);
-    printf("\nValor del nivel cuadrante 2: %d", tree->cuadrante2->nivel);
-    printf("\nValor del nivel cuadrante 3: %d", tree->cuadrante3->nivel);
-    printf("\nValor del nivel cuadrante 4: %d", tree->cuadrante4->nivel);*/
+    matrizPixel* imgPrincipal = (matrizPixel*) img;
 
     //Si los cuadrantes no están en el nivel máximo de descomposición, entonces se generan 4 hebras por cada cuadrante.
     //Recordar que la función generadora de Hebras de por sí genera 4 hebras, y es por ello que cada hebra invoca a esta función de manera recursiva.
-    if (tree->cuadrante1->nivel!=niveles && tree->cuadrante2->nivel!=niveles 
-    && tree->cuadrante3->nivel!=niveles && tree->cuadrante4->nivel!=niveles){
+    if (imgPrincipal->nivel != niveles){
         //printf("\n entra al if?");
-        pthread_create(&h1,NULL,generadoraHebras,tree->cuadrante1);
-        pthread_join(h1,&status);
+        matrizPixel* subImg1 = (matrizPixel*)malloc(sizeof(matrizPixel));
+        matrizPixel* subImg2 = (matrizPixel*)malloc(sizeof(matrizPixel));
+        matrizPixel* subImg3 = (matrizPixel*)malloc(sizeof(matrizPixel));
+        matrizPixel* subImg4 = (matrizPixel*)malloc(sizeof(matrizPixel));
+        subImg1 = cuadrante1(imgPrincipal);
+        subImg2 = cuadrante2(imgPrincipal);
+        subImg3 = cuadrante3(imgPrincipal);
+        subImg4 = cuadrante4(imgPrincipal);
 
-        pthread_create(&h2,NULL,generadoraHebras,tree->cuadrante2);
-        pthread_join(h2,&status);
+        pthread_create(&h1,NULL,generadoraHebras,(void*) subImg1);
+        pthread_create(&h2,NULL,generadoraHebras,(void*) subImg2);
+        pthread_create(&h3,NULL,generadoraHebras,(void*) subImg3);
+        pthread_create(&h4,NULL,generadoraHebras,(void*) subImg4);
 
-        pthread_create(&h3,NULL,generadoraHebras,tree->cuadrante3);
-        pthread_join(h3,&status);
-
-        pthread_create(&h4,NULL,generadoraHebras,tree->cuadrante4);
-        pthread_join(h4,&status);
-
+        pthread_join(h1,&status1);
+        pthread_join(h2,&status2);
+        pthread_join(h3,&status3);
+        pthread_join(h4,&status4);
     }
     else
     {
         printf("\n \nENTRANDO AL ELSE?\n");
-        pthread_create(&h1,NULL,funcion,tree->cuadrante1->imagen);
-        pthread_join(h1,&status);
-        pthread_create(&h2,NULL,funcion,tree->cuadrante2->imagen);
-        pthread_join(h2,&status);
-        pthread_create(&h3,NULL,funcion,tree->cuadrante3->imagen);
-        pthread_join(h3,&status);
-        pthread_create(&h4,NULL,funcion,tree->cuadrante4->imagen);
-        pthread_join(h4,&status);
+        //Calcula histograma de la subimagen
+        return funcion((void*) imgPrincipal);
     }
+
+    //AQUI SE HACE UNA FUNCION DE SUMAR LOS 4 HISTOGRAMAS DE LOS STATUS.
+    //*((int*)xd) =  *((int*)status1) + *((int*)status2) + *((int*)status3) + *((int*)status4);
+    //LUEGO, SE RETORNA ESE HISTOGRAMA RESULTANTE COMO VOID*
+    //SE PODRÍA LIBERAR MEMORIA DE LOS OTROS 4 HISTOGRAMAS (LOS 4 STATUS)
+    //FINALMENTE, EL RETORNO DE LA HEBRA 1 QUE ESTÁ EN EL MAIN SERÁ EL RESULTADO DE LAS SUMAS DE TODOS LOS HISTOGRAMAS.
+    //EN EL MAIN Y LA LINEA SIGUIENTE, SE ESCRIBE UN ARCHIVO .TXT CON EL PARÁMETRO DEL HISTOGRAMA RESULTANTE.
     
-
-
-    /*void *status1;
-    void *status2;
-    contador++;
-    printf("\nVALOR DEL CONTADOR: %d",contador);
-
-    printf("\nCreando cuadrante uno\n");
-    matrizPixel* nuevaImg1=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg1=cuadrante1(img);
-    printf("\nValor del cuadrante 1 en nivel: %d\n",contador);
-    imprimirMatriz(nuevaImg1);*/
-
-    /*printf("\nCreando cuadrante dos\n");
-    matrizPixel* nuevaImg2=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg2=cuadrante2(img);
-    printf("\nValor del cuadrante 2 en nivel: %d\n",contador);
-    imprimirMatriz(nuevaImg2);
-
-    printf("\nCreando cuadrante tres\n");
-    matrizPixel* nuevaImg3=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg3=cuadrante3(img);
-    printf("\nValor del cuadrante 3 en nivel: %d\n",contador);
-    imprimirMatriz(nuevaImg3);
-
-    printf("\nCreando cuadrante cuatro\n");
-    matrizPixel* nuevaImg4=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg4=cuadrante4(img);
-    printf("\nValor del cuadrante 4 en nivel: %d\n",contador);
-    imprimirMatriz(nuevaImg4);*/
-
-    //Aquí se pregunta si el contador el igual al valor de niveles, si lo es entonces hacer el trabajo, sino generar 4 hebras para esta hebra.
-    /*if(contador==niveles){
-        pthread_create(&h1, NULL, funcion, (void *) nuevaImg1);
-        pthread_join(h1,&resultadoCuad1);
-    }
-    else{
-        pthread_create(&h1, NULL, generadoraHebras, (void *) nuevaImg1);
-        //imprimirMatriz(nuevaImg1);
-        pthread_join(h1,&status1);
-    }*/
-
-    
-    /*printf("\n\n\n PASANDO A CUADRANTE 2\n\n\n");
-    printf("\nCreando cuadrante dos\n");
-    matrizPixel* nuevaImg2=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg2=cuadrante2(img);
-    printf("\nValor del cuadrante 2 en nivel: %d\n",contador);
-    imprimirMatriz(nuevaImg2);
-    //Aquí se pregunta si el contador el igual al valor de niveles, si lo es entonces hacer el trabajo, sino generar 4 hebras para esta hebra.
-    if(contador==niveles){
-        pthread_create(&h2, NULL, funcion, (void *) nuevaImg2);
-        pthread_join(h2,&resultadoCuad2);
-    }
-    else{
-        pthread_create(&h2, NULL, generadoraHebras, (void *) nuevaImg2);
-        //imprimirMatriz(nuevaImg1);
-        pthread_join(h2,&status2);
-    }*/
-
-
-    /*pthread_create(&h3, NULL, funcion, (void *) nuevaImg2);
-    pthread_join(h3,&resultadoCuad2);*/
-
-    /*printf("\nCreando cuadrante tres\n");
-    matrizPixel* nuevaImg3=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg3=cuadrante3(img);
-    pthread_create(&h4, NULL, funcion, (void *) nuevaImg3);
-    pthread_join(h4,&resultadoCuad3);
-
-    printf("\nCreando cuadrante cuatro\n");
-    matrizPixel* nuevaImg4=(matrizPixel*)malloc(sizeof(matrizPixel));
-    nuevaImg4=cuadrante4(img);
-    pthread_create(&h5, NULL, funcion, (void *) nuevaImg4);
-    pthread_join(h5,&resultadoCuad4);*/
-
-
-    //Se llaman a los cuadrantes y se almacena memoria para 4 nuevas img.
-    //Estas img serán el parámetro de cada hebra, y estas van a llamar a suma.
-    //El ciclo terminará cuando el contador llegue a 0.
     //Cuando el ciclo termine, entonces las 4 hebras que se crean en esta función seguirán a otra función.
     //Esta función calcula el histograma de la porción de imagen que se pasó como parámetro.
     //No olvidar los free().
     //Esta función debe sumar las histogramas.
+    /*f(matrizPixel* img){
+    //Recorre TODA la imagen que se pasa por parámetro
+    //se crean 4 subimagenes
+    //Según la sección del for en la que estemos, se asigna a una subimagen u otra (según el cuadrante)
+    //retornamos un array de 4 subimagenes
+}*/
 
 }
 
@@ -352,15 +253,15 @@ void* generadoraHebras(void *img){
 //salida: 1 si el valor ingresado es potencia de 2, o 0 si no lo es.
 int comprobarPot2(int num){
     int res=2;
-    if(num==res){
+    if(num == res){
         return 1;
     }
-    while(res!=num){
+    while(res != num){
         res=2*res;
-        if(res==num){
+        if(res == num){
             return 1;
         }
-        if (res>num){
+        if (res > num){
             return 0;
         }
     }
@@ -480,24 +381,17 @@ int main(int argc, char *argv[]){
     
     matrizPixel* imagenOriginal= cargarImagen("imagen8.bmp");
     //niveles está como variable global
-    niveles=2;
+    niveles = 3;
     //matrizPixel* img = crearImg(altura);
     //En el primer nivel se tendría la imagen original, es decir, sin dvidirla por cuadrantes.
     //imagenOriginal está como variable global.
     //imagenOriginal = crearImg(altura);
-    quadTree* main=(quadTree*)malloc(sizeof(quadTree));
-    main->nivel=0;
-    main->imagen=imagenOriginal;
-    main->cuadrante1=NULL;
-    main->cuadrante2=NULL;
-    main->cuadrante3=NULL;
-    main->cuadrante4=NULL;
-    
+    imagenOriginal -> nivel = 0;
     imprimirMatriz(imagenOriginal);
+
 	void *resultadoFinal;
     printf("\nNiveles: %d",niveles);
-
-	pthread_create(&h1, NULL, generadoraHebras, (void *) main);
+    pthread_create(&h1, NULL, generadoraHebras, (void *) imagenOriginal);
     pthread_join(h1,&resultadoFinal);
 
 
