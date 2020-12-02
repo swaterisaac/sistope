@@ -36,6 +36,17 @@ typedef struct __attribute__((__packed__)) {
     unsigned char  r;                                                                                                                                                                                                                        
 }pixel;
 /////////////////////////////////////////////////////////////////////
+typedef struct bin {
+  int inferior;
+  int superior;
+  int valorI;
+}bin;
+/////////////////////////////////////////////////////////////////////
+typedef struct histograma {
+  bin *arregloBin;
+  int largo;
+}histograma;
+/////////////////////////////////////////////////////////////////////
 //Estructura que permite almacenar una imagen, es decir, una matriz de pixeles,
 //el orden y el nivel en el cual está dicha imagen
 typedef struct matrizPixel{
@@ -97,7 +108,7 @@ matrizPixel* cargarImagen(char *filename){
     for (int i=0;i<largoImagen;i++){
         for(int j=0;j<largoImagen;j++){
             fread(&matriz[i][j],1,sizeof(pixel),f);
-            printf("%d %d %d|",matriz[i][j].r,matriz[i][j].g,matriz[i][j].b); //Para printear los píxeles (debug).
+            printf("[ %d %d %d ]",matriz[i][j].r,matriz[i][j].g,matriz[i][j].b); //Para printear los píxeles (debug).
         }
         printf("\n");
     }
@@ -190,6 +201,17 @@ matrizPixel* cuadrante4(matrizPixel* img){
         //printf("\n");
     }
     return nuevaImg;
+}
+
+
+histograma* generarBins(int cantidadBins){
+    histograma* hist = (histograma*)malloc(sizeof(histograma));
+    int largoBin = 256/cantidadBins;
+    hist->largo = cantidadBins;
+    bin* myBin = (bin*)malloc(sizeof(bin)*largoBin);
+    for(int = 0; i<cantidadBins; i++){
+        
+    }
 }
 void* funcion(void *img){
     printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
@@ -402,7 +424,7 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, char **sali
 int main(int argc, char *argv[]){
 	pthread_t h1;
     
-    imagenOriginal= cargarImagen("tresColores2.bmp");
+    imagenOriginal= cargarImagen("tresColores.bmp");
     //matrizPixel* imagenOriginal= cargarImagen("negro.bmp");
     //niveles está como variable global
     niveles = 2;
@@ -411,7 +433,8 @@ int main(int argc, char *argv[]){
     //imagenOriginal está como variable global.
     //imagenOriginal = crearImg(altura);
     imagenOriginal -> nivel = 0;
-    //imprimirMatriz(imagenOriginal);
+    printf("\nFunción imprimir matriz: \n");
+    imprimirMatriz(imagenOriginal);
 
 	void *resultadoFinal;
     printf("\nNiveles: %d",niveles);
