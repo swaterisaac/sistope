@@ -233,16 +233,17 @@ void* obtenerHistograma(void *img){
     //Se tranforma la imagen a Matriz de Grises
     matrizPixel* imagen = (matrizPixel*)img;
     histograma* hist = generarHistogramaInicial(bins);
-    float grisRelativo;
+    int grisRelativo;
     //imprimirMatriz(imagen);
     //printf("Orden de img: %d",imagen->orden);
     
     for(int i = 0; i < imagen->orden; i++){
         for(int j = 0; j < imagen->orden; j++){
-            grisRelativo = ((float) imagen->matriz[i][j].r)*0.3 + ((float)imagen->matriz[i][j].g)*0.59 + ((float)imagen->matriz[i][j].b)*0.11;
+            grisRelativo = imagen->matriz[i][j].r*0.3 + imagen->matriz[i][j].g*0.59 + imagen->matriz[i][j].b*0.11;
+            //printf("%d ", grisRelativo);
             //printf("%d %d %d|",imagen->matriz[i][j].r,imagen->matriz[i][j].g,imagen->matriz[i][j].b);
             for(int k = 0; k < hist->largo;k++){
-                if((int)grisRelativo >= hist->arregloBin[k].inferior && (int)grisRelativo <= hist->arregloBin[k].superior){
+                if(grisRelativo >= hist->arregloBin[k].inferior && grisRelativo <= hist->arregloBin[k].superior){
                     hist->arregloBin[k].valorI = hist->arregloBin[k].valorI + 1;
                     k = hist->largo;
                 }
