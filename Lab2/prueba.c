@@ -33,7 +33,8 @@ typedef struct __attribute__((__packed__)) {
 typedef struct __attribute__((__packed__)) {                                                                                                                                                                                                                             
     unsigned char  b;                                                                                                                                                                                                                        
     unsigned char  g;                                                                                                                                                                                                                        
-    unsigned char  r;                                                                                                                                                                                                                        
+    unsigned char  r;
+    unsigned char alpha;                                                                                                                                                                                                                 
 }pixel;
 /////////////////////////////////////////////////////////////////////
 typedef struct bin {
@@ -70,6 +71,12 @@ void imprimirMatriz(matrizPixel* img){
     }
 }
 
+void imprimirHistograma(histograma* hist){
+    for(int i = 0; i < hist->largo; i++){
+        printf("[%d,%d]\t%d\n",hist->arregloBin[i].inferior,hist->arregloBin[i].superior,hist->arregloBin[i].valorI);
+    }
+}
+
 //descripción:
 //entrada:
 //salida:
@@ -90,51 +97,24 @@ matrizPixel* cargarImagen(char *filename){
     fread(&bInfoHeader, sizeof(unsigned char), sizeof(bmpInfoHeader), f);
     int largoImagen = bInfoHeader.width;
     printf("Largo de la imagen: %d\n",largoImagen);
-    /*pixel** matrizPixel = (pixel**)malloc(sizeof(pixel*)*largoImagen);
+    pixel** matrizPixel = (pixel**)malloc(sizeof(pixel*)*largoImagen);
     for(int i = 0; i < largoImagen;i++){
         pixel* filaPixel = (pixel*)malloc(sizeof(pixel)*largoImagen);
         for(int j = 0;j < largoImagen;j++){
             fread(&filaPixel[j], 1,sizeof(pixel), f);
-            printf("%d %d %d|",matrizPixel[i][j].r,matrizPixel[i][j].g,matrizPixel[i][j].b); //Para printear los píxeles (debug).
+            //printf("%d %d %d|",filaPixel[j].r,filaPixel[j].g,filaPixel[j].b); //Para printear los píxeles (debug).
         }
         matrizPixel[i] = filaPixel;
-        printf("\n");
-    }*/
-  
-    pixel** matriz = (pixel**)malloc(sizeof(pixel*)*largoImagen);
-    for(int i=0;i<largoImagen;i++){
-        matriz[i]=(pixel*)malloc(sizeof(pixel)*largoImagen);
+        //printf("\n");
     }
-    for (int i=0;i<largoImagen;i++){
-        for(int j=0;j<largoImagen;j++){
-            fread(&matriz[i][j],1,sizeof(pixel),f);
-            printf("[ %d %d %d ]",matriz[i][j].r,matriz[i][j].g,matriz[i][j].b); //Para printear los píxeles (debug).
-        }
-        printf("\n");
-    }
-    
-    imagenOriginal->matriz=matriz;
+
+    imagenOriginal->matriz=matrizPixel;
     imagenOriginal->orden=largoImagen;
     fclose(f);
     return imagenOriginal;
 }
 
 
-/*matrizPixel* crearImg(int orden){
-    int contador=1;
-    matrizPixel* img = (matrizPixel*)malloc(sizeof(matrizPixel));
-    img->orden = orden;
-    int** matriz = (int**)malloc(sizeof(int*)*orden);
-    for(int i = 0; i < orden;i++){
-        matriz[i] = (int*)malloc(sizeof(int)*orden);
-        for(int j = 0; j < orden;j++){
-            matriz[i][j] = contador;
-            contador++;
-        }
-    }
-    img->matriz = matriz;
-    return img;
-}*/
 //descripción:
 //entrada:
 //salida:
@@ -207,31 +187,50 @@ matrizPixel* cuadrante4(matrizPixel* img){
 histograma* generarBins(int cantidadBins){
     histograma* hist = (histograma*)malloc(sizeof(histograma));
     int largoBin = 256/cantidadBins;
-    hist->largo = cantidadBins;
-    bin* myBin = (bin*)malloc(sizeof(bin)*largoBin);
-    for(int = 0; i<cantidadBins; i++){
-        
+    bin* binRel = (bin*)malloc(sizeof(bin)*cantidadBins);
+    for(int i = 0; i < cantidadBins; i++){
+        binRel[i].inferior = i*largoBin;
+        binRel[i].superior = largoBin*(i+1) - 1;
+        binRel[i].valorI = 0;
     }
+    hist->arregloBin = binRel;
+    hist->largo = cantidadBins;
+    return hist;
+}
+void* sumarHistograma(void* hist1,void* hist2,void* hist3, void* hist4){
+    histograma* cast1 = (histograma*)hist1;
+    histograma* cast2 = (histograma*)hist2;
+    histograma* cast3 = (histograma*)hist3;
+    histograma* cast4 = (histograma*)hist4;
+    histograma* final = generarBins(bins);
+    for(int i = 0; i < cast1->largo;i++){
+        final->arregloBin[i].valorI = cast1->arregloBin[i].valorI + cast2->arregloBin[i].valorI + cast3->arregloBin[i].valorI + cast4->arregloBin[i].valorI;
+    }
+    //SE PUEDE LIBERAR MEMORIA ACÁ (los 4 cast)
+    return (void*) final;
 }
 void* funcion(void *img){
-    printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
+    //printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
     //Se tranforma la imagen a Matriz de Grises
     matrizPixel* imagen = (matrizPixel*)img;
-    imprimirMatriz(imagen);
+    histograma* hist = generarBins(bins);
+    float grisRelativo;
+    //imprimirMatriz(imagen);
     //printf("Orden de img: %d",imagen->orden);
-    float** matrizGris = (float **)malloc(sizeof(float*)*imagen->orden);
-    for(int i = 0; i<imagen->orden; i++){
-        matrizGris[i] = (float *)malloc(sizeof(float)*imagen->orden);
-    }
-
+    
     for(int i = 0; i < imagen->orden; i++){
         for(int j = 0; j < imagen->orden; j++){
-            matrizGris[i][j] = imagen->matriz[i][j].r*0.3 + imagen->matriz[i][j].g*0.59 + imagen->matriz[i][j].b*0.11;
+            grisRelativo = ((float) imagen->matriz[i][j].r)*0.3 + ((float)imagen->matriz[i][j].g)*0.59 + ((float)imagen->matriz[i][j].b)*0.11;
             //printf("%d %d %d|",imagen->matriz[i][j].r,imagen->matriz[i][j].g,imagen->matriz[i][j].b);
-            printf("[%.2f] ",matrizGris[i][j]);
+            for(int k = 0; k < hist->largo;k++){
+                if((int)grisRelativo >= hist->arregloBin[k].inferior && (int)grisRelativo <= hist->arregloBin[k].superior){
+                    hist->arregloBin[k].valorI = hist->arregloBin[k].valorI + 1;
+                    k = hist->largo;
+                }
+            }   
         }
-        printf("\n");
     }
+    return (void*) hist;
 }
 
 void* generadoraHebras(void *img){
@@ -269,11 +268,11 @@ void* generadoraHebras(void *img){
     }
     else
     {
-        printf("\n \nENTRANDO AL ELSE?\n");
         //Calcula histograma de la subimagen
         return funcion((void*) imgPrincipal);
     }
-
+    
+    return sumarHistograma(status1,status2,status3,status4);
     //AQUI SE HACE UNA FUNCION DE SUMAR LOS 4 HISTOGRAMAS DE LOS STATUS.
     //*((int*)xd) =  *((int*)status1) + *((int*)status2) + *((int*)status3) + *((int*)status4);
     //LUEGO, SE RETORNA ESE HISTOGRAMA RESULTANTE COMO VOID*
@@ -312,6 +311,27 @@ int comprobarPot2(int num){
         }
     }
 }
+
+int potencia(int num1,int num2){
+  if(num1 == 1){
+    return 1;
+  }
+  if(num2 == 0){
+    return 1;
+  }
+  return num1*potencia(num1,num2-1);
+}
+
+int calcularOrdenDisminuido(int orden){
+    int x = 0;
+    while(orden != 1){
+        orden = orden/2;
+        x++;
+        //printf("%d\n",orden);
+    }
+    return x;
+}
+
 //descripción: imprime un mensaje de error por pantalla.
 //entrada: arreglo con las entradas ingresadas.
 //salida: imprime por pantalla.
@@ -423,33 +443,42 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, char **sali
 
 int main(int argc, char *argv[]){
 	pthread_t h1;
-    
-    imagenOriginal= cargarImagen("tresColores.bmp");
-    //matrizPixel* imagenOriginal= cargarImagen("negro.bmp");
-    //niveles está como variable global
-    niveles = 2;
-    //matrizPixel* img = crearImg(altura);
-    //En el primer nivel se tendría la imagen original, es decir, sin dvidirla por cuadrantes.
-    //imagenOriginal está como variable global.
-    //imagenOriginal = crearImg(altura);
-    imagenOriginal -> nivel = 0;
-    printf("\nFunción imprimir matriz: \n");
-    imprimirMatriz(imagenOriginal);
+    void *resultadoFinal;
+    histograma* histogramaFinal;
 
-	void *resultadoFinal;
-    printf("\nNiveles: %d",niveles);
+    char *nombreArchivo, *salida;
+    
+    //Se reciben atributos por el getOPT
+	recibirArgumentos(argc, argv, &nombreArchivo, &salida, &niveles, &bins);
+    printf("El argumento de flag -i es: %s\n", nombreArchivo);
+    printf("El argumento de flag -o es: %s\n", salida);
+    printf("El argumento de flag -L es: %d\n", niveles);
+    printf("El argumento de flag -B es: %d\n", bins);
+
+
+
+    imagenOriginal = (matrizPixel*)malloc(sizeof(matrizPixel));
+    imagenOriginal -> nivel = 0;
+    imagenOriginal = cargarImagen(nombreArchivo);
+    //printf("\nFunción imprimir matriz: \n");
+    //imprimirMatriz(imagenOriginal);
+
+    //Validación niveles
+    if(niveles >= calcularOrdenDisminuido(imagenOriginal->orden) && potencia(2, 2*niveles - calcularOrdenDisminuido(imagenOriginal->orden)) > imagenOriginal->orden){
+       printf("La cantidad de cuadrantes generados con %d niveles son más que las dimensiones de la imagen\n",niveles);
+       printf("(%dx%d)\n",imagenOriginal->orden,imagenOriginal->orden); 
+       exit(1);
+    }
+
+    //Crear primera hebra
     pthread_create(&h1, NULL, generadoraHebras, (void *) imagenOriginal);
     pthread_join(h1,&resultadoFinal);
 
+    //Capturar el histograma armado
+    histogramaFinal = (histograma*) resultadoFinal;
+    imprimirHistograma(histogramaFinal);
 
-    /*int cantidadNiveles = 0, cantidadBins = 0;
-    char *nombreArchivo, *salida;
-    //Se reciben atributos por el getOPT
-	recibirArgumentos(argc, argv, &nombreArchivo, &salida, &cantidadNiveles, &cantidadBins );
-    printf("El argumento de flag -i es: %s\n", nombreArchivo);
-    printf("El argumento de flag -o es: %s\n", salida);
-    printf("El argumento de flag -L es: %d\n", cantidadNiveles);
-    printf("El argumento de flag -B es: %d\n", cantidadBins);*/
+
 
     /*int numero;
     scanf("%d",&numero);
@@ -458,3 +487,18 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }   
+
+
+  
+    /*pixel** matriz = (pixel**)malloc(sizeof(pixel*)*largoImagen);
+    for(int i=0;i<largoImagen;i++){
+        matriz[i]=(pixel*)malloc(sizeof(pixel)*largoImagen);
+    }
+    for (int i=0;i<largoImagen;i++){
+        for(int j=0;j<largoImagen;j++){
+            fread(&matriz[i][j],1,sizeof(pixel),f);
+            printf("[ %d %d %d ]",matriz[i][j].r,matriz[i][j].g,matriz[i][j].b); //Para printear los píxeles (debug).
+        }
+        printf("\n");
+    }
+    */
