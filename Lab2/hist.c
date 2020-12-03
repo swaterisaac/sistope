@@ -37,12 +37,14 @@ typedef struct __attribute__((__packed__)) {
     unsigned char alpha;                                                                                                                                                                                                                 
 }pixel;
 /////////////////////////////////////////////////////////////////////
+//Estructura que permite reprrsentar un bin, considerando límite inferior y superior, y su valor de I.
 typedef struct bin {
   int inferior;
   int superior;
   int valorI;
 }bin;
 /////////////////////////////////////////////////////////////////////
+//Estructura que permite representar un histograma, considerando un arreglo de bins, y su largo.
 typedef struct histograma {
   bin *arregloBin;
   int largo;
@@ -77,14 +79,14 @@ void imprimirHistograma(histograma* hist){
     }
 }
 
-//descripción:
-//entrada:
-//salida:
+//descripción: permite capturar los datos de una imagen con formato BMP.
+//entrada: un string que representa el nombre del archivo que contiene la imagen.
+//salida: una estructura de tipo matrizPixel.
 matrizPixel* cargarImagen(char *filename){
     FILE *f;
     bmpFileHeader header;
-    unsigned char *imgdata;
-    uint16_t type;
+    //unsigned char *imgdata;
+    //uint16_t type;
     bmpInfoHeader bInfoHeader;
 
     f = fopen (filename, "rb");
@@ -107,17 +109,15 @@ matrizPixel* cargarImagen(char *filename){
         matrizPixel[i] = filaPixel;
         //printf("\n");
     }
-
     imagenOriginal->matriz=matrizPixel;
     imagenOriginal->orden=largoImagen;
     fclose(f);
     return imagenOriginal;
 }
 
-
-//descripción:
-//entrada:
-//salida:
+//descripción: obtiene el primer cuadrante de una estructura de tipo matrizPixel.
+//entrada: una estructura de tipo matrizPixel.
+//salida: una estructura de tipo matrizPixel que representa el cuadrante 1 de la imgen entregada como entrada.
 matrizPixel* cuadrante1(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
     nuevaImg->nivel = img -> nivel + 1;
@@ -135,6 +135,9 @@ matrizPixel* cuadrante1(matrizPixel* img){
     return nuevaImg;
 }
 
+//descripción: obtiene el segundo cuadrante de una estructura de tipo matrizPixel.
+//entrada: una estructura de tipo matrizPixel.
+//salida: una estructura de tipo matrizPixel que representa el cuadrante 2 de la imgen entregada como entrada.
 matrizPixel* cuadrante2(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
     nuevaImg->nivel = img -> nivel + 1;
@@ -151,6 +154,9 @@ matrizPixel* cuadrante2(matrizPixel* img){
     return nuevaImg;
 }
 
+//descripción: obtiene el tercer cuadrante de una estructura de tipo matrizPixel.
+//entrada: una estructura de tipo matrizPixel.
+//salida: una estructura de tipo matrizPixel que representa el cuadrante 3 de la imgen entregada como entrada.
 matrizPixel* cuadrante3(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
     nuevaImg->nivel = img -> nivel + 1;
@@ -167,6 +173,9 @@ matrizPixel* cuadrante3(matrizPixel* img){
     return nuevaImg;
 }
 
+//descripción: obtiene el cuarto cuadrante de una estructura de tipo matrizPixel.
+//entrada: una estructura de tipo matrizPixel.
+//salida: una estructura de tipo matrizPixel que representa el cuadrante 4 de la imgen entregada como entrada.
 matrizPixel* cuadrante4(matrizPixel* img){
     matrizPixel* nuevaImg= (matrizPixel *)malloc(sizeof(matrizPixel));
     nuevaImg->nivel = img -> nivel + 1;
@@ -183,8 +192,10 @@ matrizPixel* cuadrante4(matrizPixel* img){
     return nuevaImg;
 }
 
-
-histograma* generarBins(int cantidadBins){
+//descripción: permite generar un histograma en base a la cantidad de bins entregada.
+//entrada: un entero que representa la cantidad de bins.
+//salida: una estructura de tipo histograma.
+histograma* generarHistogramaInicial(int cantidadBins){
     histograma* hist = (histograma*)malloc(sizeof(histograma));
     int largoBin = 256/cantidadBins;
     bin* binRel = (bin*)malloc(sizeof(bin)*cantidadBins);
@@ -197,23 +208,31 @@ histograma* generarBins(int cantidadBins){
     hist->largo = cantidadBins;
     return hist;
 }
+
+//descripción: suma los resultados de 4 histogramas.
+//entrada: 4 void puntero que corresponden a los 4 histogramas.
+//salida: un void puntero que representa el histograma final, luego que haber sumado los 4 histogramas.
 void* sumarHistograma(void* hist1,void* hist2,void* hist3, void* hist4){
     histograma* cast1 = (histograma*)hist1;
     histograma* cast2 = (histograma*)hist2;
     histograma* cast3 = (histograma*)hist3;
     histograma* cast4 = (histograma*)hist4;
-    histograma* final = generarBins(bins);
+    histograma* final = generarHistogramaInicial(bins);
     for(int i = 0; i < cast1->largo;i++){
         final->arregloBin[i].valorI = cast1->arregloBin[i].valorI + cast2->arregloBin[i].valorI + cast3->arregloBin[i].valorI + cast4->arregloBin[i].valorI;
     }
     //SE PUEDE LIBERAR MEMORIA ACÁ (los 4 cast)
     return (void*) final;
 }
-void* funcion(void *img){
+
+//descripción: obtiene el histograma de una determinada porción de imagen.
+//entrada: un void puntero que corresponde a la porción de imagen.
+//salida: un void puntero que corresponde al histograma.
+void* obtenerHistograma(void *img){
     //printf("\n ******* Aquí se encarga de calcular el histograma para este cuadrante: *******\n");
     //Se tranforma la imagen a Matriz de Grises
     matrizPixel* imagen = (matrizPixel*)img;
-    histograma* hist = generarBins(bins);
+    histograma* hist = generarHistogramaInicial(bins);
     float grisRelativo;
     //imprimirMatriz(imagen);
     //printf("Orden de img: %d",imagen->orden);
@@ -233,6 +252,9 @@ void* funcion(void *img){
     return (void*) hist;
 }
 
+//descripción: genera las 4 hebras y los cuatro cuadrantes de una imagen o porción de imagen.
+//entrada: un void puntero que corresponde a la imagen o porción de imagen.
+//salida: un void puntero que corresponde al histograma calculado.
 void* generadoraHebras(void *img){
     pthread_t h1;
     pthread_t h2;
@@ -269,7 +291,7 @@ void* generadoraHebras(void *img){
     else
     {
         //Calcula histograma de la subimagen
-        return funcion((void*) imgPrincipal);
+        return obtenerHistograma((void*) imgPrincipal);
     }
     
     return sumarHistograma(status1,status2,status3,status4);
@@ -297,6 +319,9 @@ void* generadoraHebras(void *img){
 //entrada: un valor entero.
 //salida: 1 si el valor ingresado es potencia de 2, o 0 si no lo es.
 int comprobarPot2(int num){
+    if(num == 0){
+        return 1;
+    }
     int res=2;
     if(num == res){
         return 1;
@@ -310,8 +335,12 @@ int comprobarPot2(int num){
             return 0;
         }
     }
+    return 0;
 }
 
+//descripción: permiter obtener una potencia.
+//entrada: dos números enteros. 
+//salida: un entero que representa la potencia.
 int potencia(int num1,int num2){
   if(num1 == 1){
     return 1;
@@ -322,6 +351,9 @@ int potencia(int num1,int num2){
   return num1*potencia(num1,num2-1);
 }
 
+//descripción:
+//entrada:
+//salida:
 int calcularOrdenDisminuido(int orden){
     int x = 0;
     while(orden != 1){
@@ -440,6 +472,18 @@ void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, char **sali
 	}
 }
 
+//descripción: permite escribir el histograma en el archivo de salida.
+//entrada: el nombre del archivo y el histograma final.
+//salida: como es de tipo void, no tiene salida.
+void escribirArchivo (char *archivo, histograma* hist){
+    FILE* arch = fopen(archivo,"w");
+    for(int i = 0; i < bins; i++){
+        fprintf(arch,"[%d,   ",hist->arregloBin[i].inferior);
+        fprintf(arch,"%d]    ",hist->arregloBin[i].superior);
+        fprintf(arch,"%d",hist->arregloBin[i].valorI);
+        fprintf(arch,"\n");
+    }
+}
 
 int main(int argc, char *argv[]){
 	pthread_t h1;
@@ -476,9 +520,9 @@ int main(int argc, char *argv[]){
 
     //Capturar el histograma armado
     histogramaFinal = (histograma*) resultadoFinal;
+
+    escribirArchivo(salida,histogramaFinal);
     imprimirHistograma(histogramaFinal);
-
-
 
     /*int numero;
     scanf("%d",&numero);
