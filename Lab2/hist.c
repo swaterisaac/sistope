@@ -64,7 +64,7 @@ typedef struct matrizPixel{
 }matrizPixel;
 /////////////////////////////////////////////////////////////////////
 //Variables globales
-int niveles, bins;
+int niveles, bins,prueba;
 
 /////////////////////////////////////////////////////////////////////
 
@@ -310,6 +310,7 @@ void* generadoraHebras(void *img){
     else
     {
         //Calcula histograma de la subimagen
+        prueba+=1;
         return obtenerHistograma((void*) imgPrincipal);
     }
     
@@ -505,7 +506,7 @@ void escribirArchivo (char *archivo, histograma* hist){
     FILE* arch = fopen(archivo,"w");
     for(int i = 0; i < bins; i++){
         fprintf(arch,"[%d,   ",hist->arregloBin[i].inferior);
-        fprintf(arch,"%d]    ",hist->arregloBin[i].superior);
+        fprintf(arch,"%d]\t",hist->arregloBin[i].superior);
         fprintf(arch,"%d",hist->arregloBin[i].valorI);
         fprintf(arch,"\n");
     }
@@ -545,7 +546,7 @@ int main(int argc, char *argv[]){
 
     //Capturar el histograma armado
     histogramaFinal = (histograma*) resultadoFinal;
-
+    printf("------>%d<------\n",prueba);
     escribirArchivo(salida,histogramaFinal);
     imprimirHistograma(histogramaFinal);
 	return 0;
