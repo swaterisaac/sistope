@@ -43,40 +43,28 @@ int largoMaximo, cantidadDiscos,anchoDisco;
 EstructuraComun estructuraComun;
 
 //Debug funciones:
-void llenarBasura(Tabla* tablaRel);
+
+/////////////////////////////////////////////////////
 
 Tabla* inicializarTabla(int cantidadFilas){
     Tabla* tablaRet = (Tabla*)malloc(sizeof(Tabla));
     tablaRet->listaVisibilidad = (Visibilidad*)malloc(sizeof(Visibilidad)*cantidadFilas);
-    /*
-    for(int i = 0; i < cantidadFilas; i++){
-        tablaRet->listaVisibilidad
-[i] = (double*)malloc(sizeof(double)*cantidadColumnas);
-    }
-    */
     tablaRet->cantidadFilas = cantidadFilas;
     return tablaRet;
 }
 
+Tabla** inicializarTablas(int cantidadFilas){
+    Tabla** tablas = (Tabla**)malloc(sizeof(Tabla*)* cantidadDiscos);
+    for(int i = 0; i < cantidadDiscos;i++){
+        tablas[i] = inicializarTabla(0);
+    }
+    return tablas;
+}
 
 void aumentarFila(Tabla* tablaRel){
     tablaRel->listaVisibilidad = (Visibilidad*)realloc(tablaRel->listaVisibilidad,sizeof(Visibilidad)*(tablaRel->cantidadFilas+1));
     tablaRel->cantidadFilas = tablaRel->cantidadFilas + 1;
     return;
-}
-
-void aumentarFilaTablas(Tabla** tablasRel, int index){
-    //Tabla* tablaNueva = (Tabla*)malloc(sizeof(Tabla)*(tablasRel[index]->cantidadFilas + 1));
-    Tabla* tablaNueva = inicializarTabla(tablasRel[index]->cantidadFilas + 1);
-    for(int i = 0 ; i < tablasRel[index]->cantidadFilas;i++){
-        tablaNueva->listaVisibilidad[i].u = tablasRel[index]->listaVisibilidad[i].u;
-        tablaNueva->listaVisibilidad[i].v = tablasRel[index]->listaVisibilidad[i].v;
-        tablaNueva->listaVisibilidad[i].r = tablasRel[index]->listaVisibilidad[i].r;
-        tablaNueva->listaVisibilidad[i].i = tablasRel[index]->listaVisibilidad[i].i;
-        tablaNueva->listaVisibilidad[i].w = tablasRel[index]->listaVisibilidad[i].w;
-    }
-    free(tablasRel[index]);
-    tablasRel[index] = tablaNueva;
 }
 
 void imprimirTabla(Tabla* tabla){
@@ -126,10 +114,7 @@ int calcularDisco(Visibilidad visibilidad){
 
 Tabla** leerArchivo(char* nombreArchivo){
     
-    Tabla** tablas = (Tabla**)malloc(sizeof(Tabla*)* cantidadDiscos);
-    for(int i = 0; i < cantidadDiscos;i++){
-        tablas[i] = inicializarTabla(0);
-    }
+    Tabla** tablas = inicializarTablas(0);
     FILE* archivo = fopen(nombreArchivo,"r");
     
 
@@ -140,6 +125,7 @@ Tabla** leerArchivo(char* nombreArchivo){
     //Se obtienen las lineas del archivo
     int lineas = obtenerLineas(archivo);
     int index = 0;
+    int subIndex = 0;
     Visibilidad* aux = (Visibilidad*)malloc(sizeof(Visibilidad)*lineas);
     //Se vuelve a abrir el archivo
     archivo = fopen(nombreArchivo,"r");
@@ -149,18 +135,23 @@ Tabla** leerArchivo(char* nombreArchivo){
         index = calcularDisco(aux[i]);
         printf("INDEX: %d\n",index);
         
-        aumentarFilaTablas(tablas,index);
-        printf("Soy la tabla %d y mi cantidad de filas son %d\n\n",index,tablas[index]->cantidadFilas);
-        tablas[index]->listaVisibilidad[i].u = aux[i].u;
-        tablas[index]->listaVisibilidad[i].v = aux[i].v;
-        tablas[index]->listaVisibilidad[i].r = aux[i].r;
-        tablas[index]->listaVisibilidad[i].i = aux[i].i;
-        tablas[index]->listaVisibilidad[i].w = aux[i].w;
+        aumentarFila(tablas[index]);
+        subIndex = tablas[index]->cantidadFilas - 1;
+        //printf("Soy la tabla %d y mi cantidad de filas son %d\n\n",index,tablas[index]->cantidadFilas);
+        tablas[index]->listaVisibilidad[subIndex].u = aux[i].u;
+        tablas[index]->listaVisibilidad[subIndex].v = aux[i].v;
+        tablas[index]->listaVisibilidad[subIndex].r = aux[i].r;
+        tablas[index]->listaVisibilidad[subIndex].i = aux[i].i;
+        tablas[index]->listaVisibilidad[subIndex].w = aux[i].w;
         
         //printf("%lf,%lf,%lf,%lf,%lf\n",aux[i].u,aux[i].v,aux[i].r,aux[i].i,aux[i].w);
     }
     free(aux);
     fclose(archivo);
+    for(int i = 0; i < cantidadDiscos;i++){
+        printf("Disco %d: %d\n",i+1,tablas[i]->cantidadFilas);
+    }
+    
     return tablas;
 }
 
@@ -177,10 +168,11 @@ Tabla** leerArchivo(char* nombreArchivo){
 */
 
 int main(){
-    cantidadDiscos = 3;
-    anchoDisco = 2;
+    cantidadDiscos = 4;
+    anchoDisco = 50;
 
-    imprimirTablas(leerArchivo("prueba2.csv"));
+    //imprimirTablas(leerArchivo("prueba2.csv"));
+    leerArchivo("prueba2.csv");
 
     //Argumentos a recibir por línea de comandos (esto será parte del getopt)
     int radios; //número de radios
@@ -203,55 +195,3 @@ int main(){
     return 0;
 }
 
-/*void llenarBasura(Tabla* tablaRel){
-    for(int i = 0; i < tablaRel->cantidadFilas; i++){
-        for(int j = 0; j < tablaRel->cantidadColumnas;j++){
-            tablaRel->listaVisibilidad
-    [i][j] = j + 0.1*i;
-        }
-    }
-}*/
-//Debug 1
-    /*
-    Tabla* tabla = inicializarTabla(0,COLUMNAS);
-    for(int i = 0; i < 10;i++){
-        aumentarFila(tabla);
-    }
-    llenarBasura(tabla);
-    //imprimirTabla(tabla);
-
-    aumentarFila(tabla);
-    for(int i = 0; i < COLUMNAS; i++){
-        tabla->listaVisibilidad
-[tabla->cantidadFilas-1][i] = 10+i;
-    }
-    imprimirTabla(tabla);
-    */
-
-           /*Visibilidad* aux = (Visibilidad*)malloc(sizeof(Visibilidad));
-        double temp1;
-        double temp2;
-        double temp3;
-        double temp4;
-        double temp5;
-
-        fscanf(archivo,"%lf,",&temp1);
-        fscanf(archivo,"%lf,",&temp2);
-        fscanf(archivo,"%lf,",&temp3);
-        fscanf(archivo,"%lf,",&temp4);
-        fscanf(archivo,"%lf,",&temp5);
-
-        aux->u = temp1;
-        aux->v = temp2;
-        aux->r = temp3;
-        aux->i = temp4;
-        aux->w = temp5;
-        printf("%lf,%lf,%lf,%lf,%lf\n",aux->u,aux->v,aux->r,aux->i,aux->w);
-        int index = calcularDisco(aux);
-        tablas[index]->listaVisibilidad[i].u = aux->u;
-        tablas[index]->listaVisibilidad[i].v = aux->v;
-        tablas[index]->listaVisibilidad[i].r = aux->r;
-        tablas[index]->listaVisibilidad[i].i = aux->i;
-        tablas[index]->listaVisibilidad[i].w = aux->w;
-        free(aux);
-        */
