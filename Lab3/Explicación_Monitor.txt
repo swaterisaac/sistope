@@ -1,0 +1,71 @@
+int array[100]
+//Vamos a tener un monitor que tendrá variables asociadas
+//Para poder simular este monitor, tenemos que considerar que vamos a simularlo, por lo tanto,
+//vamos a tener que sí o sí utilizar funciones como los mutex
+//Si queremos usar una función del monitor, tenemos que proveer exclusión mutua a través de lock y unlock
+//Cada vez que queramos modificar una variable o usar las funciones del monitor, se debe usar lock y unlock
+//Si vamos a trabajar por ejemplo con llenar y vaciar una lista, si quiero insertar un elemento
+//pero está llena la lista, no debería agregar, pero tampoco debería eliminar.
+//Si soy productor, no puedo llegar y eliminar un elemento para poder seguir produciendo 
+//Al hacer un wait, el monitor queda libre
+//Vamos a bloquear una hebra sólo cuando esté dentro de un caso borde porque la exclusión mutua ya existe
+//Wait y Signal son para sincronizar
+//No podemos consumir infinito
+struct monitor{
+    //variables declaradas acá
+    int i,j;
+    cond full, empty;
+    //Suponemos que estas funciones son del monitor
+    agregar();
+    eliminar();
+    
+}
+
+//Funciones declaradas
+void agregar{
+    //Si quiero agregar, y está lleno, necesito que el consumidor consuma para poder liberar espacio
+    //Hasta que al menos un consumidor consuma
+    //Quiero agregar pero está lleno, entonces qué hago, se bloquea
+    if(size==100){
+        mutex_cond_wait(full) //bloquear a la hebra que quiera agregar elementos cuando está lleno
+    }
+    else{
+        
+        array[i] = x;
+        size++;
+        //Acá debo liberar una variable de condición 
+        mutex_cond_signal(empty) //para avisar que ya no está vacío, y despertar a la hebra que estaba bloqueada y ahora 
+        //va a poder vaciar
+    }
+
+    
+}
+
+void eliminar(){
+    //¿Por qué necesitamos varibales de condición?
+    //Porque si voy a eliminar algo y el tamaño es igual a 0, no tiene sentido tratar de eliminar algo
+    //Esto sería un caso de borde
+    //El monitor tiene variables de condición para sincronizar los casos de borde
+    if(size == 0){
+        //Variable de condición para bloquear
+        mutex_cond_wait(empty)
+    }
+    array[i]=-1;
+    size--
+    mutex_cond_signal(full) //se envía una señal a full para avisar que se eliminó uno
+}
+consumidor{
+    //aquí se consume una lista que va a ser global
+    //Aquí estaríamos simulando que una función conrrespondiente al monitor sólo es accedidad por
+    //una única hebra, sin embargo necesitamos variables de condición
+    mutex_lock();
+    eliminar();
+    mutex_unlock();
+}
+
+main{
+    //vamos a tener las hebras que van a ejecutar alguna función, por ejemplo consumidor
+    while(i<n){
+        pthread_create(consumidor)
+    }
+}
