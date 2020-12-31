@@ -105,6 +105,7 @@ Disco* inicializarDisco(){
     disco->mediaReal = 0;
     disco->potencia = 0;
     disco->ruidoTotal = 0;
+    return disco;
 }
 
 void aumentarValorDisco(Disco* disco, Visibilidad valores){
@@ -242,12 +243,13 @@ int main(){
     leerArchivo("prueba2.csv");
 
     //Argumentos a recibir por línea de comandos (esto será parte del getopt)
+    /*
     int radios; //número de radios
     int anchoIntervalo; //ancho de cada intervalo
     char *archivoEntrada; 
     char *archivoSalida;
     int tamBuffer; //tamaño del buffer de cada monitor
-
+    */
     /*
     El proceso principal debe crear tantos monitores y hebras como n ́umero de discos hayan sido especifi-
     cados (una hebra por cada disco). Además de mutex, variables de condici ́on y cualquier herramienta
