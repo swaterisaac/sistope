@@ -16,10 +16,6 @@ struct Visibilidad{
     double w;
 }typedef Visibilidad;
 
-struct Tabla{
-    Visibilidad* listaVisibilidad;
-    int cantidadFilas;
-}typedef Tabla;
 
 struct Disco{
     double mediaReal;
@@ -31,19 +27,25 @@ struct Disco{
 
 struct EstructuraComun{
     Disco** discos;
+    pthread_mutex_t mutexEstructura;
 }typedef EstructuraComun;
 
 //largoMaximo será una variable global
 struct Buffer{
     int elementosActuales;
-    Visibilidad* listaVisibilidad;
+    Visibilidad** listaVisibilidad;
 }typedef Buffer;
 
 struct Monitor{
+    int index;
+    int trabajando;
     Buffer* buffer;
     pthread_cond_t noVacio;
     pthread_cond_t noLleno;
-    void (*agregar)(struct Monitor*,Visibilidad);
+    pthread_cond_t bufferLleno;
+    pthread_mutex_t mutexProduccion;
+    pthread_mutex_t mutexRelleno;
+    void (*agregar)(struct Monitor*,Visibilidad*);
     void (*eliminar)(struct Monitor*);
 }typedef Monitor;
 
@@ -51,51 +53,107 @@ struct Monitor{
 int largoMaximo, cantidadDiscos,anchoDisco;
 EstructuraComun estructuraComun;
 
+
+
+
+//Cabeceras
+void* calcularVisibilidad(void* monitor);
+
+
 //Debug funciones:
 
 /////////////////////////////////////////////////////
 /*
 FUNCIONES DE MONITOR
 */
-void agregar(Monitor* monitor, Visibilidad filaAgregar){
-
+void agregar(Monitor* monitor, Visibilidad* filaAgregar){
+    //printf("1a\n");
+    if(monitor->buffer->elementosActuales == largoMaximo){
+        pthread_cond_signal(&monitor->bufferLleno);
+        pthread_cond_wait(&monitor->noLleno,&monitor->mutexRelleno);
+    }
+    monitor->buffer->elementosActuales = monitor->buffer->elementosActuales + 1;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->i = filaAgregar->i;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->r = filaAgregar->r;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->w = filaAgregar->w;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->u = filaAgregar->u;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->v = filaAgregar->v;
+    
+    pthread_cond_signal(&monitor->noVacio);
     return;
 }
 
 void eliminar(Monitor* monitor){
-    
+    if(monitor->buffer->elementosActuales == 0){
+        pthread_cond_wait(&monitor->noVacio,&monitor->mutexRelleno);
+    }
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->i = 0;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->w = 0;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->r = 0;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->v = 0;
+    monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->u = 0;
+    monitor->buffer->elementosActuales = monitor->buffer->elementosActuales - 1;
+    pthread_cond_signal(&monitor->noLleno);
     return;
 }
 
-Tabla* inicializarTabla(int cantidadFilas){
-    Tabla* tablaRet = (Tabla*)malloc(sizeof(Tabla));
-    tablaRet->listaVisibilidad = (Visibilidad*)malloc(sizeof(Visibilidad)*cantidadFilas);
-    tablaRet->cantidadFilas = cantidadFilas;
-    return tablaRet;
-}
 
-Tabla** inicializarTablas(int cantidadFilas){
-    Tabla** tablas = (Tabla**)malloc(sizeof(Tabla*)* cantidadDiscos);
-    for(int i = 0; i < cantidadDiscos;i++){
-        tablas[i] = inicializarTabla(0);
+Visibilidad* inicializarVisibilidad(){
+    Visibilidad* visibilidad = (Visibilidad*)malloc(sizeof(Visibilidad));
+    visibilidad->i = 0;
+    visibilidad->r = 0;
+    visibilidad->u = 0;
+    visibilidad->v = 0;
+    visibilidad->w = 0;
+    return visibilidad;
+}
+Visibilidad** inicializarVisibilidades(){
+    Visibilidad** visibilidades = (Visibilidad**)malloc(sizeof(Visibilidad*)*largoMaximo);
+    for(int i = 0; i < largoMaximo;i++){
+        visibilidades[i] = inicializarVisibilidad();
     }
-    return tablas;
+    return visibilidades;
 }
 Buffer* inicializarBuffer(){
     Buffer* buffer = (Buffer*)malloc(sizeof(Buffer));
     buffer->elementosActuales = 0;
-    buffer->listaVisibilidad = (Visibilidad*)malloc(sizeof(Visibilidad)*largoMaximo);
+    buffer->listaVisibilidad = inicializarVisibilidades();
     return buffer;
 }
 
-Monitor* inicializarMonitor(){
+Monitor* inicializarMonitor(int index){
     Monitor* monitor = (Monitor*)malloc(sizeof(Monitor));
     monitor->buffer = inicializarBuffer();
     monitor->agregar = agregar;
     monitor->eliminar = eliminar;
+    monitor->index = index;
+    monitor->trabajando = 1;
     pthread_cond_init(&monitor->noLleno, NULL);
     pthread_cond_init(&monitor->noVacio, NULL);
+    pthread_cond_init(&monitor->bufferLleno, NULL);
+    pthread_mutex_init(&monitor->mutexProduccion,NULL);
+    pthread_mutex_init(&monitor->mutexRelleno,NULL);
     return monitor;
+}
+
+Monitor** inicializarMonitores(){
+    Monitor** monitores = (Monitor**)malloc(sizeof(Monitor*)*cantidadDiscos);
+    for(int i = 0; i < cantidadDiscos;i++){
+        monitores[i] = inicializarMonitor(i);
+    }
+    return monitores;
+}
+
+pthread_t* inicializarHebras(Monitor** monitores){
+    pthread_t* arregloHebras = (pthread_t*)malloc(sizeof(pthread_t)*cantidadDiscos);
+    for(int i = 0; i < cantidadDiscos;i++){
+        pthread_t aux;
+        arregloHebras[i] = aux;
+    }
+    for(int i = 0; i < cantidadDiscos;i++){
+        pthread_create(&arregloHebras[i],NULL,calcularVisibilidad,(void*)monitores[i]);
+    }
+    return arregloHebras;
 }
 
 Disco* inicializarDisco(){
@@ -108,48 +166,49 @@ Disco* inicializarDisco(){
     return disco;
 }
 
-void aumentarValorDisco(Disco* disco, Visibilidad valores){
-    disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
-    disco->mediaReal = (disco->mediaReal + valores.r)/(disco->cantidadVisibilidades + 1);
-    
-    disco->mediaImaginaria = disco->mediaImaginaria * disco->cantidadVisibilidades;
-    disco->mediaImaginaria = (disco->mediaImaginaria + valores.i)/(disco->cantidadVisibilidades + 1);
-
-    disco->cantidadVisibilidades = disco->cantidadVisibilidades + 1;
-
-    disco->potencia = disco->potencia + pow(valores.r,2) + sqrt(pow(valores.i,2));
-
-    disco->ruidoTotal = disco->ruidoTotal + valores.w;
-    return;
-}
-
-void aumentarFila(Tabla* tablaRel){
-    tablaRel->listaVisibilidad = (Visibilidad*)realloc(tablaRel->listaVisibilidad,sizeof(Visibilidad)*(tablaRel->cantidadFilas+1));
-    tablaRel->cantidadFilas = tablaRel->cantidadFilas + 1;
-    return;
-}
-
-void imprimirTabla(Tabla* tabla){
-    for(int i = 0; i < tabla->cantidadFilas;i++){
-        printf("%5lf;%5lf;%5lf;%5lf;%5lf\n",tabla->listaVisibilidad[i].u,tabla->listaVisibilidad[i].v,tabla->listaVisibilidad[i].w,tabla->listaVisibilidad[i].i,tabla->listaVisibilidad[i].w);
-    }
-    return;
-}
-void imprimirTablas(Tabla** tablas){
-    for(int i = 0; i < cantidadDiscos;i++){
-        printf("\nDisco %d:\n\n",i+1);
-        imprimirTabla(tablas[i]);
-    }
-    return;
-}
-
-void inicializarEstructuraComun(){
+void inicializarEstructura(){
     estructuraComun.discos = (Disco**)malloc(sizeof(Disco*)*cantidadDiscos);
-    for(int i = 0; i < cantidadDiscos; i++){
-        estructuraComun.discos[i] = (Disco*)malloc(sizeof(Disco));
+    for(int i = 0; i < cantidadDiscos;i++){
+        estructuraComun.discos[i] = inicializarDisco();
+    }
+    pthread_mutex_init(&estructuraComun.mutexEstructura,NULL);
+}
+
+void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
+    int cantidadElementosMonitor = monitor->buffer->elementosActuales;
+    int cantidadElementosMonitorEst = monitor->buffer->elementosActuales;
+    for(int i = 0; i < cantidadElementosMonitorEst;i++){
+        bufferAux->listaVisibilidad[i]->i = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->i;
+        bufferAux->listaVisibilidad[i]->r = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->r;
+        bufferAux->listaVisibilidad[i]->u = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->u;
+        bufferAux->listaVisibilidad[i]->v = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->v;
+        bufferAux->listaVisibilidad[i]->w = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->w;
+        bufferAux->elementosActuales = bufferAux->elementosActuales + 1;
+
+        pthread_mutex_lock(&monitor->mutexProduccion);
+        monitor->eliminar(monitor);
+        pthread_mutex_unlock(&monitor->mutexProduccion);
+        
+        cantidadElementosMonitor = monitor->buffer->elementosActuales;        
     }
     return;
 }
+
+void actualizarValorDisco(Disco* disco, Buffer* valores){
+    disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
+    disco->mediaImaginaria = disco->mediaImaginaria * disco->cantidadVisibilidades;
+    for(int i = 0; i < valores->elementosActuales;i++){
+        disco->mediaReal = (disco->mediaReal + valores->listaVisibilidad[i]->r);
+        disco->mediaImaginaria = (disco->mediaImaginaria + valores->listaVisibilidad[i]->i);
+        disco->potencia = disco->potencia + pow(valores->listaVisibilidad[i]->r,2) + sqrt(pow(valores->listaVisibilidad[i]->i,2));
+        disco->ruidoTotal = disco->ruidoTotal + valores->listaVisibilidad[i]->w;
+    }
+    disco->cantidadVisibilidades = disco->cantidadVisibilidades + valores->elementosActuales;
+    disco->mediaReal = disco->mediaReal/disco->cantidadVisibilidades;
+    disco->mediaImaginaria = disco->mediaImaginaria/disco->cantidadVisibilidades;
+    return;
+}
+
 
 int obtenerLineas(FILE *archivo){
     int contador = 0;
@@ -162,8 +221,11 @@ int obtenerLineas(FILE *archivo){
     fclose(archivo);
     return lineas;
 }
-int calcularDisco(Visibilidad visibilidad){
-    double resultado = sqrt(pow(visibilidad.u,2) + pow(visibilidad.v,2));
+
+
+
+int calcularDisco(Visibilidad* visibilidad){
+    double resultado = sqrt(pow(visibilidad->u,2) + pow(visibilidad->v,2));
     int ite = 0;
     for(int i = 0; i < cantidadDiscos - 1;i++){
         if(resultado >= ite && resultado < anchoDisco*(i+1)){
@@ -174,12 +236,43 @@ int calcularDisco(Visibilidad visibilidad){
     return cantidadDiscos-1;
 }
 
-Tabla** leerArchivo(char* nombreArchivo){
+void* calcularVisibilidad(void* monitor){
+    Buffer* bufferAux = inicializarBuffer();
+    Monitor* monitorR = (Monitor*)monitor;
+    int index = monitorR->index;    
+    //Quede esperando hasta que el buffer del monitor esté lleno.
+    while(monitorR->trabajando != 0){
+        pthread_cond_wait(&monitorR->bufferLleno,&monitorR->mutexRelleno);
+        //Vaciar buffer
+        vaciarBuffer(monitorR,bufferAux);
+
+        pthread_mutex_lock(&estructuraComun.mutexEstructura);
+        actualizarValorDisco(estructuraComun.discos[index],bufferAux);
+        pthread_mutex_unlock(&estructuraComun.mutexEstructura);
+
+    }
+    return NULL;
+}
+
+void terminoLectura(Monitor** monitores){
+    for(int i = 0; i < cantidadDiscos;i++){
+        pthread_cond_signal(&monitores[i]->bufferLleno);
+        monitores[i]->trabajando = 0;
+    }
+    return;
+}
+
+void escribirArchivo(char* nombreArchivo){
+
+    return;
+}
+
+void leerArchivo(char* nombreArchivo){
     
-    Tabla** tablas = inicializarTablas(0);
     //Inicializamos un arreglo de monitores de largo Ndiscos
-    //Monitor** monitores = inicializarMonitores(cantidadDiscos);
-    //Inicializamos un arreglo de hebras de largo Nhebras
+    Monitor** monitores = inicializarMonitores();
+    //Inicializamos un arreglo de hebras de largo Ndiscos
+    pthread_t* arregloHebras = inicializarHebras(monitores);
 
     //Creamos las hebras con pthread_create a una función que calcule lo que haya en los monitores, solo cuando el buffer de estos
     //esté lleno o ya no haya más datos que leer. El parámetro de la función serían los monitores declarados arriba.
@@ -197,49 +290,53 @@ Tabla** leerArchivo(char* nombreArchivo){
     int subIndex = 0;
 
     //Creamos un arreglo de Visibilidad (fila del csv) para ir guardando
-    Visibilidad* aux = (Visibilidad*)malloc(sizeof(Visibilidad)*lineas);
+    Visibilidad* aux;
     //Se vuelve a abrir el archivo
     archivo = fopen(nombreArchivo,"r");
 
     for (int i=0; i<lineas;i++){
-        fscanf(archivo,"%lf,%lf,%lf,%lf,%lf,",&aux[i].u,&aux[i].v,&aux[i].r,&aux[i].i,&aux[i].w);
-        //Se calcula el disco al que va la fila con la función d(u,v) = (u**2 + v**2)**0.5 y el ancho del radio.
-        index = calcularDisco(aux[i]);
+        aux = (Visibilidad*)malloc(sizeof(Visibilidad));
+        fscanf(archivo,"%lf,%lf,%lf,%lf,%lf,",&aux->u,&aux->v,&aux->r,&aux->i,&aux->w);
 
+        //Se calcula el disco al que va la fila con la función d(u,v) = (u**2 + v**2)**0.5 y el ancho del radio.
+        index = calcularDisco(aux);
         //printf("INDEX: %d\n",index);
+
+
         //Se agrega al monitor correspondiente con el index y la funcion agregar los valores de esa Visibilidad (fila).
         //Hay que asegurarse de que se hace un lock antes de agregar y unlock después de agregar.
         //Si la cantidad de elementos del monitor es igual al tamaño maximo del buffer, la hebra se desbloquea para hacer
         //los cálculos.
-        
-        aumentarFila(tablas[index]);
-        subIndex = tablas[index]->cantidadFilas - 1;
-        //printf("Soy la tabla %d y mi cantidad de filas son %d\n\n",index,tablas[index]->cantidadFilas);
-        tablas[index]->listaVisibilidad[subIndex].u = aux[i].u;
-        tablas[index]->listaVisibilidad[subIndex].v = aux[i].v;
-        tablas[index]->listaVisibilidad[subIndex].r = aux[i].r;
-        tablas[index]->listaVisibilidad[subIndex].i = aux[i].i;
-        tablas[index]->listaVisibilidad[subIndex].w = aux[i].w;
-        
-        //printf("%lf,%lf,%lf,%lf,%lf\n",aux[i].u,aux[i].v,aux[i].r,aux[i].i,aux[i].w);
+        //Mutex lock
+        pthread_mutex_lock(&monitores[index]->mutexProduccion);
+        monitores[index]->agregar(monitores[index],aux);
+
+        //Mutex unlock
+        pthread_mutex_unlock(&monitores[index]->mutexProduccion);
+        printf("%lf,%lf,%lf,%lf,%lf\n",monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->u,
+        monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->v,
+        monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->r,
+        monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->i,
+        monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->w);
+        free(aux);
     }
+
     //Cuando termine de leer el archivo, se manda una señal para desbloquear la hebra
     //y que calcule del buffer sin necesidad que esté lleno.
     free(aux);
     fclose(archivo);
-    for(int i = 0; i < cantidadDiscos;i++){
-        printf("Disco %d: %d\n",i+1,tablas[i]->cantidadFilas);
-    }
-    
-    return tablas;
+    terminoLectura(monitores);
+
+    return;
 }
 
 
 int main(){
+    inicializarEstructura();
     cantidadDiscos = 4;
     anchoDisco = 50;
+    largoMaximo = 100;
 
-    //imprimirTablas(leerArchivo("prueba2.csv"));
     leerArchivo("prueba2.csv");
 
     //Argumentos a recibir por línea de comandos (esto será parte del getopt)
