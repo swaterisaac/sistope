@@ -8,7 +8,7 @@
 
 //Ya que los archivos csv siempre van a tener una cantidad fija de columnas.
 #define COLUMNAS 5
-struct{
+struct Visibilidad{
     double u;
     double v;
     double r;
@@ -16,27 +16,36 @@ struct{
     double w;
 }typedef Visibilidad;
 
-struct{
+struct Tabla{
     Visibilidad* listaVisibilidad;
     int cantidadFilas;
 }typedef Tabla;
 
-struct{
+struct Disco{
     double mediaReal;
     double mediaImaginaria;
     double potencia;
     double ruidoTotal;
+    int cantidadVisibilidades;
 }typedef Disco;
 
-struct{
+struct EstructuraComun{
     Disco** discos;
 }typedef EstructuraComun;
 
 //largoMaximo será una variable global
-struct{
-    int largoBuffer;
+struct Buffer{
+    int elementosActuales;
     Visibilidad* listaVisibilidad;
 }typedef Buffer;
+
+struct Monitor{
+    Buffer* buffer;
+    pthread_cond_t noVacio;
+    pthread_cond_t noLleno;
+    void (*agregar)(struct Monitor*,Visibilidad);
+    void (*eliminar)(struct Monitor*);
+}typedef Monitor;
 
 //Variables globales
 int largoMaximo, cantidadDiscos,anchoDisco;
@@ -45,6 +54,18 @@ EstructuraComun estructuraComun;
 //Debug funciones:
 
 /////////////////////////////////////////////////////
+/*
+FUNCIONES DE MONITOR
+*/
+void agregar(Monitor* monitor, Visibilidad filaAgregar){
+
+    return;
+}
+
+void eliminar(Monitor* monitor){
+    
+    return;
+}
 
 Tabla* inicializarTabla(int cantidadFilas){
     Tabla* tablaRet = (Tabla*)malloc(sizeof(Tabla));
@@ -59,6 +80,46 @@ Tabla** inicializarTablas(int cantidadFilas){
         tablas[i] = inicializarTabla(0);
     }
     return tablas;
+}
+Buffer* inicializarBuffer(){
+    Buffer* buffer = (Buffer*)malloc(sizeof(Buffer));
+    buffer->elementosActuales = 0;
+    buffer->listaVisibilidad = (Visibilidad*)malloc(sizeof(Visibilidad)*largoMaximo);
+    return buffer;
+}
+
+Monitor* inicializarMonitor(){
+    Monitor* monitor = (Monitor*)malloc(sizeof(Monitor));
+    monitor->buffer = inicializarBuffer();
+    monitor->agregar = agregar;
+    monitor->eliminar = eliminar;
+    pthread_cond_init(&monitor->noLleno, NULL);
+    pthread_cond_init(&monitor->noVacio, NULL);
+    return monitor;
+}
+
+Disco* inicializarDisco(){
+    Disco* disco = (Disco*)malloc(sizeof(Disco*));
+    disco->cantidadVisibilidades = 0;
+    disco->mediaImaginaria = 0;
+    disco->mediaReal = 0;
+    disco->potencia = 0;
+    disco->ruidoTotal = 0;
+}
+
+void aumentarValorDisco(Disco* disco, Visibilidad valores){
+    disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
+    disco->mediaReal = (disco->mediaReal + valores.r)/(disco->cantidadVisibilidades + 1);
+    
+    disco->mediaImaginaria = disco->mediaImaginaria * disco->cantidadVisibilidades;
+    disco->mediaImaginaria = (disco->mediaImaginaria + valores.i)/(disco->cantidadVisibilidades + 1);
+
+    disco->cantidadVisibilidades = disco->cantidadVisibilidades + 1;
+
+    disco->potencia = disco->potencia + pow(valores.r,2) + sqrt(pow(valores.i,2));
+
+    disco->ruidoTotal = disco->ruidoTotal + valores.w;
+    return;
 }
 
 void aumentarFila(Tabla* tablaRel){
@@ -115,25 +176,40 @@ int calcularDisco(Visibilidad visibilidad){
 Tabla** leerArchivo(char* nombreArchivo){
     
     Tabla** tablas = inicializarTablas(0);
-    FILE* archivo = fopen(nombreArchivo,"r");
-    
+    //Inicializamos un arreglo de monitores de largo Ndiscos
+    //Monitor** monitores = inicializarMonitores(cantidadDiscos);
+    //Inicializamos un arreglo de hebras de largo Nhebras
 
+    //Creamos las hebras con pthread_create a una función que calcule lo que haya en los monitores, solo cuando el buffer de estos
+    //esté lleno o ya no haya más datos que leer. El parámetro de la función serían los monitores declarados arriba.
+
+    //Se empieza a leer el archivo
+    FILE* archivo = fopen(nombreArchivo,"r");
     if(archivo == NULL){
         printf("No existe tal archivo.\n");
     }
-
     //Se obtienen las lineas del archivo
     int lineas = obtenerLineas(archivo);
+    //Este index sirve para saber a qué disco se le asigna la fila del csv.
     int index = 0;
+    //Este subindex es una variable auxiliar para obtener el largoVisibilidad - 1.
     int subIndex = 0;
+
+    //Creamos un arreglo de Visibilidad (fila del csv) para ir guardando
     Visibilidad* aux = (Visibilidad*)malloc(sizeof(Visibilidad)*lineas);
     //Se vuelve a abrir el archivo
     archivo = fopen(nombreArchivo,"r");
 
     for (int i=0; i<lineas;i++){
         fscanf(archivo,"%lf,%lf,%lf,%lf,%lf,",&aux[i].u,&aux[i].v,&aux[i].r,&aux[i].i,&aux[i].w);
+        //Se calcula el disco al que va la fila con la función d(u,v) = (u**2 + v**2)**0.5 y el ancho del radio.
         index = calcularDisco(aux[i]);
-        printf("INDEX: %d\n",index);
+
+        //printf("INDEX: %d\n",index);
+        //Se agrega al monitor correspondiente con el index y la funcion agregar los valores de esa Visibilidad (fila).
+        //Hay que asegurarse de que se hace un lock antes de agregar y unlock después de agregar.
+        //Si la cantidad de elementos del monitor es igual al tamaño maximo del buffer, la hebra se desbloquea para hacer
+        //los cálculos.
         
         aumentarFila(tablas[index]);
         subIndex = tablas[index]->cantidadFilas - 1;
@@ -146,6 +222,8 @@ Tabla** leerArchivo(char* nombreArchivo){
         
         //printf("%lf,%lf,%lf,%lf,%lf\n",aux[i].u,aux[i].v,aux[i].r,aux[i].i,aux[i].w);
     }
+    //Cuando termine de leer el archivo, se manda una señal para desbloquear la hebra
+    //y que calcule del buffer sin necesidad que esté lleno.
     free(aux);
     fclose(archivo);
     for(int i = 0; i < cantidadDiscos;i++){
@@ -155,17 +233,6 @@ Tabla** leerArchivo(char* nombreArchivo){
     return tablas;
 }
 
-
-/*void generarHebras_Monitores(){
-
-    //Podríamos tener un arreglo con las hebras y monitores y así poder iterar con un ciclo
-    pthread_t hilo[discos];
-    while(i < numeroHebras){
-        pthread_create(&hilo[i], NULL, alguna funcion, algo);
-        i++;
-    }
-}
-*/
 
 int main(){
     cantidadDiscos = 4;
