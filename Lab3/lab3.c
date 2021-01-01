@@ -67,10 +67,19 @@ void* calcularVisibilidad(void* monitor);
 FUNCIONES DE MONITOR
 */
 void agregar(Monitor* monitor, Visibilidad* filaAgregar){
-    //printf("1a\n");
+    printf("\na");
+    printf("\nEntrando a la función agregar");
+    //printf("\nElementos actuales del buffer: %d y valor del largo máximo: %d",monitor->buffer->elementosActuales,largoMaximo);
+    printf("HOLA?");
     if(monitor->buffer->elementosActuales == largoMaximo){
-        pthread_cond_signal(&monitor->bufferLleno);
-        pthread_cond_wait(&monitor->noLleno,&monitor->mutexRelleno);
+        printf("HOLA?");
+        printf("Llego al max");
+        
+        
+        //pthread_cond_signal(&monitor->bufferLleno);
+    
+        //pthread_cond_wait(&monitor->noLleno,&monitor->mutexRelleno);
+        
     }
     monitor->buffer->elementosActuales = monitor->buffer->elementosActuales + 1;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->i = filaAgregar->i;
@@ -78,7 +87,7 @@ void agregar(Monitor* monitor, Visibilidad* filaAgregar){
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->w = filaAgregar->w;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->u = filaAgregar->u;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->v = filaAgregar->v;
-    
+    printf("\nElementos actuales del buffer: %d",monitor->buffer->elementosActuales);
     pthread_cond_signal(&monitor->noVacio);
     return;
 }
@@ -300,7 +309,7 @@ void leerArchivo(char* nombreArchivo){
 
         //Se calcula el disco al que va la fila con la función d(u,v) = (u**2 + v**2)**0.5 y el ancho del radio.
         index = calcularDisco(aux);
-        //printf("INDEX: %d\n",index);
+        printf("\nINDEX: %d\n",index);
 
 
         //Se agrega al monitor correspondiente con el index y la funcion agregar los valores de esa Visibilidad (fila).
@@ -308,12 +317,18 @@ void leerArchivo(char* nombreArchivo){
         //Si la cantidad de elementos del monitor es igual al tamaño maximo del buffer, la hebra se desbloquea para hacer
         //los cálculos.
         //Mutex lock
+        printf("\nantes lock");
+        printf("\nElementos en buffer: %d",monitores[index]->buffer->elementosActuales);
         pthread_mutex_lock(&monitores[index]->mutexProduccion);
+        //pthread_mutex_lock(&monitores[index]->mutexProduccion);
+        printf("\ndespues lock");
         monitores[index]->agregar(monitores[index],aux);
 
         //Mutex unlock
         pthread_mutex_unlock(&monitores[index]->mutexProduccion);
-        printf("%lf,%lf,%lf,%lf,%lf\n",monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->u,
+        //pthread_mutex_unlock(&monitores[index]->mutexProduccion);
+        
+        printf("\n%lf,%lf,%lf,%lf,%lf\n",monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->u,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->v,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->r,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->i,
