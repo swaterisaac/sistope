@@ -67,27 +67,27 @@ void* calcularVisibilidad(void* monitor);
 FUNCIONES DE MONITOR
 */
 void agregar(Monitor* monitor, Visibilidad* filaAgregar){
-    printf("\na");
-    printf("\nEntrando a la función agregar");
+
     //printf("\nElementos actuales del buffer: %d y valor del largo máximo: %d",monitor->buffer->elementosActuales,largoMaximo);
-    printf("HOLA?");
+
     if(monitor->buffer->elementosActuales == largoMaximo){
-        printf("HOLA?");
-        printf("Llego al max");
-        
-        
-        //pthread_cond_signal(&monitor->bufferLleno);
-    
-        //pthread_cond_wait(&monitor->noLleno,&monitor->mutexRelleno);
-        
+
+        //printf("Llego al max\n");
+
+        pthread_cond_wait(&monitor->noLleno,&monitor->mutexProduccion);
     }
+
+    //printf("\n%d\n",monitor->buffer->elementosActuales);
+
     monitor->buffer->elementosActuales = monitor->buffer->elementosActuales + 1;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->i = filaAgregar->i;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->r = filaAgregar->r;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->w = filaAgregar->w;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->u = filaAgregar->u;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->v = filaAgregar->v;
-    printf("\nElementos actuales del buffer: %d",monitor->buffer->elementosActuales);
+
+    //printf("NElementos del buffer %d: %d\n",monitor->index ,monitor->buffer->elementosActuales);
+
     pthread_cond_signal(&monitor->noVacio);
     return;
 }
@@ -102,7 +102,7 @@ void eliminar(Monitor* monitor){
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->v = 0;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->u = 0;
     monitor->buffer->elementosActuales = monitor->buffer->elementosActuales - 1;
-    pthread_cond_signal(&monitor->noLleno);
+
     return;
 }
 
@@ -123,11 +123,24 @@ Visibilidad** inicializarVisibilidades(){
     }
     return visibilidades;
 }
+
+void imprimirVisibilidad(Visibilidad* visibilidad){
+    printf("%lf;%lf;%lf;%lf;%lf\n",visibilidad->u,visibilidad->v,visibilidad->r,visibilidad->i,visibilidad->w);
+    return;
+}
+
 Buffer* inicializarBuffer(){
     Buffer* buffer = (Buffer*)malloc(sizeof(Buffer));
     buffer->elementosActuales = 0;
     buffer->listaVisibilidad = inicializarVisibilidades();
     return buffer;
+}
+
+void imprimirBuffer(Buffer* buffer){
+    for(int i = 0;i < buffer->elementosActuales;i++){
+        imprimirVisibilidad(buffer->listaVisibilidad[i]);
+    }
+    return;
 }
 
 Monitor* inicializarMonitor(int index){
@@ -164,9 +177,9 @@ pthread_t* inicializarHebras(Monitor** monitores){
     }
     return arregloHebras;
 }
-
+//FUNCIONES DISCO
 Disco* inicializarDisco(){
-    Disco* disco = (Disco*)malloc(sizeof(Disco*));
+    Disco* disco = (Disco*)malloc(sizeof(Disco));
     disco->cantidadVisibilidades = 0;
     disco->mediaImaginaria = 0;
     disco->mediaReal = 0;
@@ -174,32 +187,72 @@ Disco* inicializarDisco(){
     disco->ruidoTotal = 0;
     return disco;
 }
+void imprimirDisco(Disco* disco){
+    printf("Cantidad visibilidades: %d\n",disco->cantidadVisibilidades);
+    printf("Media imaginaria: %f\n",disco->mediaImaginaria);
+    printf("Media real: %f\n",disco->mediaReal);
+    printf("Potencia: %f\n",disco->potencia);
+    printf("Ruido total: %f\n",disco->ruidoTotal);
+    return;
+}
 
+//FUNCIONES ESTRUCTURA
 void inicializarEstructura(){
     estructuraComun.discos = (Disco**)malloc(sizeof(Disco*)*cantidadDiscos);
     for(int i = 0; i < cantidadDiscos;i++){
         estructuraComun.discos[i] = inicializarDisco();
     }
     pthread_mutex_init(&estructuraComun.mutexEstructura,NULL);
+    return;
+}
+
+void imprimirEstructura(EstructuraComun estructura){
+    for(int i = 0; i < cantidadDiscos;i++){
+        printf("Disco %d:\n",i);
+        imprimirDisco(estructura.discos[i]);
+        printf("\n");
+    }
+    return;
 }
 
 void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
     int cantidadElementosMonitor = monitor->buffer->elementosActuales;
     int cantidadElementosMonitorEst = monitor->buffer->elementosActuales;
     for(int i = 0; i < cantidadElementosMonitorEst;i++){
+
+        /*
+        printf("soy el iterador %d de la funcion vaciarBuffer\n",i);
+        printf("Cantidad de elementos estaticos %d\n",cantidadElementosMonitorEst);
+        printf("cantidad de elementos del bufferAux %d\n",bufferAux->elementosActuales);
+        */
+
+        bufferAux->elementosActuales = bufferAux->elementosActuales + 1;
         bufferAux->listaVisibilidad[i]->i = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->i;
         bufferAux->listaVisibilidad[i]->r = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->r;
         bufferAux->listaVisibilidad[i]->u = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->u;
         bufferAux->listaVisibilidad[i]->v = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->v;
         bufferAux->listaVisibilidad[i]->w = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->w;
-        bufferAux->elementosActuales = bufferAux->elementosActuales + 1;
+        
+        //printf("-----------------Entrando al lock de eliminar\n");
 
         pthread_mutex_lock(&monitor->mutexProduccion);
+
+        //printf("-----------------Eliminando\n");
+
         monitor->eliminar(monitor);
         pthread_mutex_unlock(&monitor->mutexProduccion);
+
+        //printf("-----------------Saliendo del lock de eliminar\n");
         
         cantidadElementosMonitor = monitor->buffer->elementosActuales;        
     }
+
+    //printf("Saliendo del ciclo for en vaciarBuffer, el aux tiene %d\n",bufferAux->elementosActuales);
+
+    //DEBERIA SER EN ELIMINAR PERO HAY PROBLEMAS
+    pthread_cond_signal(&monitor->noLleno);
+
+    //imprimirBuffer(bufferAux);
     return;
 }
 
@@ -207,12 +260,19 @@ void actualizarValorDisco(Disco* disco, Buffer* valores){
     disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
     disco->mediaImaginaria = disco->mediaImaginaria * disco->cantidadVisibilidades;
     for(int i = 0; i < valores->elementosActuales;i++){
+        //printf("%d disco 1;",i);
         disco->mediaReal = (disco->mediaReal + valores->listaVisibilidad[i]->r);
+        //printf("%d disco 2;",i);
         disco->mediaImaginaria = (disco->mediaImaginaria + valores->listaVisibilidad[i]->i);
+        //printf("%d disco 3;",i);
         disco->potencia = disco->potencia + pow(valores->listaVisibilidad[i]->r,2) + sqrt(pow(valores->listaVisibilidad[i]->i,2));
+        //printf("%d disco 4;",i);
         disco->ruidoTotal = disco->ruidoTotal + valores->listaVisibilidad[i]->w;
+        //printf("%d disco 5\n",i);
+        
     }
     disco->cantidadVisibilidades = disco->cantidadVisibilidades + valores->elementosActuales;
+    valores->elementosActuales = 0;
     disco->mediaReal = disco->mediaReal/disco->cantidadVisibilidades;
     disco->mediaImaginaria = disco->mediaImaginaria/disco->cantidadVisibilidades;
     return;
@@ -226,7 +286,7 @@ int obtenerLineas(FILE *archivo){
         contador++;
     }
     int lineas = contador/COLUMNAS;
-    printf("Cantidad lineas archivo: %d\n",lineas);
+    //printf("Cantidad lineas archivo: %d\n",lineas);
     fclose(archivo);
     return lineas;
 }
@@ -248,12 +308,20 @@ int calcularDisco(Visibilidad* visibilidad){
 void* calcularVisibilidad(void* monitor){
     Buffer* bufferAux = inicializarBuffer();
     Monitor* monitorR = (Monitor*)monitor;
-    int index = monitorR->index;    
+    int index = monitorR->index;
     //Quede esperando hasta que el buffer del monitor esté lleno.
     while(monitorR->trabajando != 0){
+
+        //printf("Soy la hebra %d y estoy esperando...\n",monitorR->index);
+
         pthread_cond_wait(&monitorR->bufferLleno,&monitorR->mutexRelleno);
+
+        //printf("Soy la hebra %d y deje de esperar! (vaciando buffer...)\n",monitorR->index);
+
         //Vaciar buffer
         vaciarBuffer(monitorR,bufferAux);
+
+        //printf("Soy la hebra %d y deje de vaciar el buffer, ahora escribire en la estructura\n",monitorR->index);
 
         pthread_mutex_lock(&estructuraComun.mutexEstructura);
         actualizarValorDisco(estructuraComun.discos[index],bufferAux);
@@ -263,10 +331,14 @@ void* calcularVisibilidad(void* monitor){
     return NULL;
 }
 
-void terminoLectura(Monitor** monitores){
+
+void terminoLectura(Monitor** monitores,pthread_t* hebras){
     for(int i = 0; i < cantidadDiscos;i++){
         pthread_cond_signal(&monitores[i]->bufferLleno);
         monitores[i]->trabajando = 0;
+    }
+    for(int i = 0; i < cantidadDiscos;i++){
+        pthread_join(hebras[i],NULL);
     }
     return;
 }
@@ -309,50 +381,54 @@ void leerArchivo(char* nombreArchivo){
 
         //Se calcula el disco al que va la fila con la función d(u,v) = (u**2 + v**2)**0.5 y el ancho del radio.
         index = calcularDisco(aux);
-        printf("\nINDEX: %d\n",index);
-
 
         //Se agrega al monitor correspondiente con el index y la funcion agregar los valores de esa Visibilidad (fila).
         //Hay que asegurarse de que se hace un lock antes de agregar y unlock después de agregar.
         //Si la cantidad de elementos del monitor es igual al tamaño maximo del buffer, la hebra se desbloquea para hacer
         //los cálculos.
         //Mutex lock
-        printf("\nantes lock");
-        printf("\nElementos en buffer: %d",monitores[index]->buffer->elementosActuales);
+        //printf("Elementos en buffer: %d\n",monitores[index]->buffer->elementosActuales);
+
+        if(monitores[index]->buffer->elementosActuales == largoMaximo){
+
+            //printf("Desbloqueando a la hebra %d...\n",index);
+
+            pthread_cond_signal(&monitores[index]->bufferLleno);
+        }
         pthread_mutex_lock(&monitores[index]->mutexProduccion);
-        //pthread_mutex_lock(&monitores[index]->mutexProduccion);
-        printf("\ndespues lock");
+        
         monitores[index]->agregar(monitores[index],aux);
 
         //Mutex unlock
         pthread_mutex_unlock(&monitores[index]->mutexProduccion);
-        //pthread_mutex_unlock(&monitores[index]->mutexProduccion);
-        
+        /*
         printf("\n%lf,%lf,%lf,%lf,%lf\n",monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->u,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->v,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->r,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->i,
         monitores[index]->buffer->listaVisibilidad[monitores[index]->buffer->elementosActuales - 1]->w);
+        */
         free(aux);
     }
 
     //Cuando termine de leer el archivo, se manda una señal para desbloquear la hebra
     //y que calcule del buffer sin necesidad que esté lleno.
-    free(aux);
     fclose(archivo);
-    terminoLectura(monitores);
-
+    terminoLectura(monitores,arregloHebras);
     return;
 }
 
 
 int main(){
-    inicializarEstructura();
+    
+    
     cantidadDiscos = 4;
-    anchoDisco = 50;
-    largoMaximo = 100;
+    anchoDisco = 100;
+    largoMaximo = 10;
 
+    inicializarEstructura();
     leerArchivo("prueba2.csv");
+    imprimirEstructura(estructuraComun);
 
     //Argumentos a recibir por línea de comandos (esto será parte del getopt)
     /*
