@@ -4,7 +4,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
+/*
+----------------agregar----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void agregar(Monitor* monitor, Visibilidad* filaAgregar){
 
     //printf("\nElementos actuales del buffer: %d y valor del largo máximo: %d",monitor->buffer->elementosActuales,largoMaximo);
@@ -31,6 +36,12 @@ void agregar(Monitor* monitor, Visibilidad* filaAgregar){
     return;
 }
 
+/*
+----------------eliminar----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void eliminar(Monitor* monitor){
     if(monitor->buffer->elementosActuales == 0){
         pthread_cond_wait(&monitor->noVacio,&monitor->mutexRelleno);
@@ -45,6 +56,13 @@ void eliminar(Monitor* monitor){
     return;
 }
 
+
+/*
+----------------inicializarVisibilidad----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 Visibilidad* inicializarVisibilidad(){
     Visibilidad* visibilidad = (Visibilidad*)malloc(sizeof(Visibilidad));
     visibilidad->i = 0;
@@ -54,6 +72,14 @@ Visibilidad* inicializarVisibilidad(){
     visibilidad->w = 0;
     return visibilidad;
 }
+
+
+/*
+----------------inicializarVisibilidades----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 Visibilidad** inicializarVisibilidades(){
     Visibilidad** visibilidades = (Visibilidad**)malloc(sizeof(Visibilidad*)*largoMaximo);
     for(int i = 0; i < largoMaximo;i++){
@@ -62,18 +88,37 @@ Visibilidad** inicializarVisibilidades(){
     return visibilidades;
 }
 
+
+/*
+----------------imprimirVisibilidad----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void imprimirVisibilidad(Visibilidad* visibilidad){
     printf("%lf;%lf;%lf;%lf;%lf\n",visibilidad->u,visibilidad->v,visibilidad->r,visibilidad->i,visibilidad->w);
     return;
 }
 
+
+/*
+----------------inicializarBuffer----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 Buffer* inicializarBuffer(){
     Buffer* buffer = (Buffer*)malloc(sizeof(Buffer));
     buffer->elementosActuales = 0;
     buffer->listaVisibilidad = inicializarVisibilidades();
     return buffer;
 }
-
+/*
+----------------imprimirBuffer----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void imprimirBuffer(Buffer* buffer){
     for(int i = 0;i < buffer->elementosActuales;i++){
         imprimirVisibilidad(buffer->listaVisibilidad[i]);
@@ -81,6 +126,13 @@ void imprimirBuffer(Buffer* buffer){
     return;
 }
 
+
+/*
+----------------inicializarMonitor----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 Monitor* inicializarMonitor(int index){
     Monitor* monitor = (Monitor*)malloc(sizeof(Monitor));
     monitor->buffer = inicializarBuffer();
@@ -96,6 +148,12 @@ Monitor* inicializarMonitor(int index){
     return monitor;
 }
 
+/*
+----------------inicializarMonitores----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 Monitor** inicializarMonitores(){
     Monitor** monitores = (Monitor**)malloc(sizeof(Monitor*)*cantidadDiscos);
     for(int i = 0; i < cantidadDiscos;i++){
@@ -104,6 +162,13 @@ Monitor** inicializarMonitores(){
     return monitores;
 }
 
+
+/*
+----------------vaciarBuffer----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
     int cantidadElementosMonitor = monitor->buffer->elementosActuales;
     int cantidadElementosMonitorEst = monitor->buffer->elementosActuales;
@@ -145,6 +210,13 @@ void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
     return;
 }
 
+
+/*
+----------------calcularVisibilidad----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void* calcularVisibilidad(void* monitor){
     Buffer* bufferAux = inicializarBuffer();
     Monitor* monitorR = (Monitor*)monitor;

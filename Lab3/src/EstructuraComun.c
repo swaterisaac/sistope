@@ -4,6 +4,12 @@
 #include <stdio.h>
 #include <math.h>
 
+/*
+----------------inicializarDisco----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 Disco* inicializarDisco(){
     Disco* disco = (Disco*)malloc(sizeof(Disco));
     disco->cantidadVisibilidades = 0;
@@ -14,6 +20,12 @@ Disco* inicializarDisco(){
     return disco;
 }
 
+/*
+----------------calcularDisco----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 int calcularDisco(Visibilidad* visibilidad){
     double resultado = sqrt(pow(visibilidad->u,2) + pow(visibilidad->v,2));
     int ite = 0;
@@ -26,6 +38,12 @@ int calcularDisco(Visibilidad* visibilidad){
     return cantidadDiscos-1;
 }
 
+/*
+----------------imprimirDisco----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void imprimirDisco(Disco* disco){
     printf("Cantidad visibilidades: %d\n",disco->cantidadVisibilidades);
     printf("Media imaginaria: %f\n",disco->mediaImaginaria);
@@ -36,6 +54,12 @@ void imprimirDisco(Disco* disco){
 }
 
 //FUNCIONES ESTRUCTURA
+/*
+----------------inicializarEstructura----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void inicializarEstructura(){
     estructuraComun.discos = (Disco**)malloc(sizeof(Disco*)*cantidadDiscos);
     for(int i = 0; i < cantidadDiscos;i++){
@@ -45,6 +69,13 @@ void inicializarEstructura(){
     return;
 }
 
+
+/*
+----------------imprimirEstructura----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void imprimirEstructura(EstructuraComun estructura){
     for(int i = 0; i < cantidadDiscos;i++){
         printf("Disco %d:\n",i);
@@ -54,6 +85,12 @@ void imprimirEstructura(EstructuraComun estructura){
     return;
 }
 
+/*
+----------------imprimirVisualizaciones----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void imprimirVisualizaciones(EstructuraComun estructura){
     for(int i = 0; i < cantidadDiscos;i++){
         printf("Soy la hebra %d, y procese %d visibilidades\n",i,estructuraComun.discos[i]->cantidadVisibilidades);
@@ -61,6 +98,13 @@ void imprimirVisualizaciones(EstructuraComun estructura){
     return;
 }
 
+
+/*
+----------------actualizarValorDisco----------------
+Entradas:
+Salidas:
+Descripción:
+*/
 void actualizarValorDisco(Disco* disco, Buffer* valores){
     disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
     disco->mediaImaginaria = disco->mediaImaginaria * disco->cantidadVisibilidades;
@@ -70,7 +114,7 @@ void actualizarValorDisco(Disco* disco, Buffer* valores){
         //printf("%d disco 2;",i);
         disco->mediaImaginaria = (disco->mediaImaginaria + valores->listaVisibilidad[i]->i);
         //printf("%d disco 3;",i);
-        disco->potencia = disco->potencia + pow(valores->listaVisibilidad[i]->r,2) + sqrt(pow(valores->listaVisibilidad[i]->i,2));
+        disco->potencia = disco->potencia + sqrt(pow(valores->listaVisibilidad[i]->r,2) + pow(valores->listaVisibilidad[i]->i,2));
         //printf("%d disco 4;",i);
         disco->ruidoTotal = disco->ruidoTotal + valores->listaVisibilidad[i]->w;
         //printf("%d disco 5\n",i);
