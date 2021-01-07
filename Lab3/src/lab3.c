@@ -1,3 +1,4 @@
+#define MAIN_FILE
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -7,6 +8,7 @@
 #include "../incl/Monitor.h"
 #include "../incl/EstructuraComun.h"
 #include "../incl/Getopt.h"
+#include "../incl/shared.h"
 
 //Ya que los archivos csv siempre van a tener una cantidad fija de columnas.
 #define COLUMNAS 5
@@ -51,10 +53,11 @@ struct Monitor{
     void (*eliminar)(struct Monitor*);
 }typedef Monitor;
 */
+/*
 //Variables globales
 int largoMaximo, cantidadDiscos,anchoDisco;
 EstructuraComun estructuraComun;
-
+*/
 
 
 
@@ -198,8 +201,9 @@ void imprimirDisco(Disco* disco){
     printf("Ruido total: %f\n",disco->ruidoTotal);
     return;
 }
-
+*/
 //FUNCIONES ESTRUCTURA
+/*
 void inicializarEstructura(){
     estructuraComun.discos = (Disco**)malloc(sizeof(Disco*)*cantidadDiscos);
     for(int i = 0; i < cantidadDiscos;i++){
@@ -343,11 +347,28 @@ void terminoLectura(Monitor** monitores,pthread_t* hebras){
     for(int i = 0; i < cantidadDiscos;i++){
         pthread_join(hebras[i],NULL);
     }
+    //Despues de esperar, se deben liberar los monitores y las hebras.
+    for(int i = 0 ; i < cantidadDiscos;i++){
+        free(monitores[i]->buffer);
+        free(monitores[i]);
+    }
+    free(monitores);
+    free(hebras);
     return;
 }
 
 void escribirArchivo(char* nombreArchivo){
+    FILE* archivo = fopen(nombreArchivo,"w");
 
+    for(int i = 0; i < cantidadDiscos;i++){
+        fprintf(archivo,"Disco %d:\n",i+1);
+        fprintf(archivo,"Media real: %f\n",estructuraComun.discos[i]->mediaReal);
+        fprintf(archivo,"Media imaginaria: %f\n",estructuraComun.discos[i]->mediaImaginaria);
+        fprintf(archivo,"Potencia: %f\n",estructuraComun.discos[i]->potencia);
+        fprintf(archivo,"Ruido total: %f\n",estructuraComun.discos[i]->ruidoTotal);
+    }
+
+    fclose(archivo);
     return;
 }
 
@@ -390,11 +411,12 @@ void leerArchivo(char* nombreArchivo){
         //Si la cantidad de elementos del monitor es igual al tamaño maximo del buffer, la hebra se desbloquea para hacer
         //los cálculos.
         //Mutex lock
-        printf("Elementos en buffer: %d\n",monitores[index]->buffer->elementosActuales);
+
+        //printf("Elementos en buffer: %d\n",monitores[index]->buffer->elementosActuales);
 
         if(monitores[index]->buffer->elementosActuales == largoMaximo){
 
-            printf("Desbloqueando a la hebra %d...\n",index);
+            //printf("Desbloqueando a la hebra %d...\n",index);
 
             pthread_cond_signal(&monitores[index]->bufferLleno);
         }
@@ -417,7 +439,6 @@ void leerArchivo(char* nombreArchivo){
     //Cuando termine de leer el archivo, se manda una señal para desbloquear la hebra
     //y que calcule del buffer sin necesidad que esté lleno.
     fclose(archivo);
-    printf("Terminé de leer el archivoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo\n");
     terminoLectura(monitores,arregloHebras);
     return;
 }
@@ -425,29 +446,33 @@ void leerArchivo(char* nombreArchivo){
 
 
 int main(int argc, char *argv[]){
-    
     //Argumentos a recibir por línea de comandos (esto será parte del getopt)
-
-    char *archivoEntrada; 
-    char *archivoSalida;
+    char* archivoEntrada; 
+    char* archivoSalida;
     int flag;
+
     recibirArgumentos(argc, argv, &archivoEntrada, &archivoSalida, &anchoDisco, &cantidadDiscos, &largoMaximo, &flag);
     printf("El argumento de flag -i es: %s\n", archivoEntrada);
     printf("El argumento de flag -o es: %s\n", archivoSalida);
     printf("El argumento de flag -d es: %d\n", anchoDisco);
     printf("El argumento de flag -n es: %d\n", cantidadDiscos);
     printf("El argumento de flag -s es: %d\n", largoMaximo);
-    if(flag == 1){
-        printf("\nMOSTRANDO RESULTADOS\n");
-    }
+
+    inicializarEstructura();
     
     /*cantidadDiscos = 4;
     anchoDisco = 100;
     largoMaximo = 100;
-    inicializarEstructura();
-    leerArchivo("prueba2.csv");
-    imprimirEstructura(estructuraComun);*/
-
+    */
+    
+    leerArchivo(archivoEntrada);
+    escribirArchivo(archivoSalida);
+    
+    if(flag == 1){
+        printf("\nMOSTRANDO RESULTADOS\n");
+        imprimirVisualizaciones(estructuraComun);
+    }
+    
     return 0;
 }
 

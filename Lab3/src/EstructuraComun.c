@@ -1,9 +1,9 @@
 #include "../incl/Estructuras.h"
+#include "../incl/shared.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-int cantidadDiscos, anchoDisco;
-EstructuraComun estructuraComun;
+
 Disco* inicializarDisco(){
     Disco* disco = (Disco*)malloc(sizeof(Disco));
     disco->cantidadVisibilidades = 0;
@@ -53,6 +53,14 @@ void imprimirEstructura(EstructuraComun estructura){
     }
     return;
 }
+
+void imprimirVisualizaciones(EstructuraComun estructura){
+    for(int i = 0; i < cantidadDiscos;i++){
+        printf("Soy la hebra %d, y procese %d visibilidades\n",i,estructuraComun.discos[i]->cantidadVisibilidades);
+    }
+    return;
+}
+
 void actualizarValorDisco(Disco* disco, Buffer* valores){
     disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
     disco->mediaImaginaria = disco->mediaImaginaria * disco->cantidadVisibilidades;

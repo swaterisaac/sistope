@@ -1,6 +1,6 @@
 salida_out = lab3
 
-salida_headers = ./incl/EstructuraComun.h ./incl/Getopt.h ./incl/Monitor.h
+salida_headers = ./incl/EstructuraComun.h ./incl/Getopt.h ./incl/Monitor.h ./incl/shared.h
 salida_source  = $(./incl/salida_headers:.h=.c) ./src/EstructuraComun.c ./src/Getopt.c ./src/Monitor.c ./src/lab3.c
 salida_objects = $(salida_source:.c=.o)
 

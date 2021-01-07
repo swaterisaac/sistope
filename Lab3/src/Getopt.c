@@ -8,7 +8,8 @@
 //salida: imprime por pantalla.
 void imprimirError(char *argv[]){
 	fprintf(stderr, "Uso correcto: %s \n[-i string: Nombre del archivo CSV]\n[-o string: Nombre del archivo de salida]"
-	"\n[-d número entero: Ancho de cada de disco]\n[-n número entero: Cantidad de discos]\n[-s número entero: Tamaño del buffer de cada monitor]\n",
+	"\n[-d número entero: Ancho de cada de disco]\n[-n número entero: Cantidad de discos]\n[-s número entero: Tamaño del buffer de cada monitor]\n"
+	"[-b si se desean imprimir los resultados.]\n",
 	argv[0]);
 	return;
 }

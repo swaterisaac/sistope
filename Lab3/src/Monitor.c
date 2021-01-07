@@ -1,9 +1,10 @@
 #include "../incl/Estructuras.h"
 #include "../incl/EstructuraComun.h"
+#include "../incl/shared.h"
 #include <stdlib.h>
 #include <stdio.h>
-int largoMaximo, cantidadDiscos;
-EstructuraComun estructuraComun;
+
+
 void agregar(Monitor* monitor, Visibilidad* filaAgregar){
 
     //printf("\nElementos actuales del buffer: %d y valor del largo máximo: %d",monitor->buffer->elementosActuales,largoMaximo);
@@ -40,7 +41,7 @@ void eliminar(Monitor* monitor){
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->v = 0;
     monitor->buffer->listaVisibilidad[monitor->buffer->elementosActuales-1]->u = 0;
     monitor->buffer->elementosActuales = monitor->buffer->elementosActuales - 1;
-
+    pthread_cond_signal(&monitor->noLleno);
     return;
 }
 
@@ -108,11 +109,11 @@ void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
     int cantidadElementosMonitorEst = monitor->buffer->elementosActuales;
     for(int i = 0; i < cantidadElementosMonitorEst;i++){
 
-        
+        /*
         printf("soy el iterador %d de la funcion vaciarBuffer\n",i);
         printf("Cantidad de elementos estaticos %d\n",cantidadElementosMonitorEst);
         printf("cantidad de elementos del bufferAux %d\n",bufferAux->elementosActuales);
-        
+        */
 
         bufferAux->elementosActuales = bufferAux->elementosActuales + 1;
         bufferAux->listaVisibilidad[i]->i = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->i;
@@ -121,24 +122,24 @@ void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
         bufferAux->listaVisibilidad[i]->v = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->v;
         bufferAux->listaVisibilidad[i]->w = monitor->buffer->listaVisibilidad[cantidadElementosMonitor-1]->w;
         
-        printf("-----------------Entrando al lock de eliminar\n");
+        //printf("-----------------Entrando al lock de eliminar\n");
 
         pthread_mutex_lock(&monitor->mutexProduccion);
 
-        printf("-----------------Eliminando\n");
+        //printf("-----------------Eliminando\n");
 
         monitor->eliminar(monitor);
         pthread_mutex_unlock(&monitor->mutexProduccion);
 
-        printf("-----------------Saliendo del lock de eliminar\n");
+        //printf("-----------------Saliendo del lock de eliminar\n");
         
         cantidadElementosMonitor = monitor->buffer->elementosActuales;        
     }
 
-    printf("Saliendo del ciclo for en vaciarBuffer, el aux tiene %d\n",bufferAux->elementosActuales);
+    //printf("Saliendo del ciclo for en vaciarBuffer, el aux tiene %d\n",bufferAux->elementosActuales);
 
     //DEBERIA SER EN ELIMINAR PERO HAY PROBLEMAS
-    pthread_cond_signal(&monitor->noLleno);
+    
 
     //imprimirBuffer(bufferAux);
     return;
@@ -151,17 +152,17 @@ void* calcularVisibilidad(void* monitor){
     //Quede esperando hasta que el buffer del monitor esté lleno.
     while(monitorR->trabajando != 0){
 
-        printf("Soy la hebra %d y estoy esperando...\n",monitorR->index);
+        //printf("Soy la hebra %d y estoy esperando...\n",monitorR->index);
 
         pthread_cond_wait(&monitorR->bufferLleno,&monitorR->mutexRelleno);
 
-        printf("Soy la hebra %d y deje de esperar! (vaciando buffer...)\n",monitorR->index);
+        //printf("Soy la hebra %d y deje de esperar! (vaciando buffer...)\n",monitorR->index);
 
         //Vaciar buffer
         vaciarBuffer(monitorR,bufferAux);
 
-        printf("Soy la hebra %d y deje de vaciar el buffer, ahora escribire en la estructura\n",monitorR->index);
-
+        //printf("Soy la hebra %d y deje de vaciar el buffer, ahora escribire en la estructura\n",monitorR->index);
+        
         pthread_mutex_lock(&estructuraComun.mutexEstructura);
         actualizarValorDisco(estructuraComun.discos[index],bufferAux);
         pthread_mutex_unlock(&estructuraComun.mutexEstructura);
