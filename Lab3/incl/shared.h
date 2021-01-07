@@ -1,4 +1,4 @@
-#include "estructuras.h"
+#include "Estructuras.h"
 #ifndef SHAREFILE_INCLUDED
 #define SHAREFILE_INCLUDED
 #ifdef  MAIN_FILE
