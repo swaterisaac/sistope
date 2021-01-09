@@ -11,4 +11,6 @@ Monitor* inicializarMonitor(int index);
 Monitor** inicializarMonitores();
 void vaciarBuffer(Monitor* monitor, Buffer* bufferAux);
 void* calcularVisibilidad(void* monitor);
+pthread_t* inicializarHebras(Monitor** monitores);
+void terminoLectura(Monitor** monitores,pthread_t* hebras);
 #endif

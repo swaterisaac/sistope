@@ -6,9 +6,9 @@
 
 /*
 ----------------inicializarDisco----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: No posee entradas.
+Salidas: Una estructura de tipo Disco.
+Descripción: Inicializa una estructura de tipo disco, reservando la memoria necesaria e iniciando en 0 los datos.
 */
 Disco* inicializarDisco(){
     Disco* disco = (Disco*)malloc(sizeof(Disco));
@@ -22,9 +22,9 @@ Disco* inicializarDisco(){
 
 /*
 ----------------calcularDisco----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: Una estrutura de tipo Visibilidad.
+Salidas: Un entero que representa a qué disco le corresponde la visibilidad.
+Descripción: Obtiene el número de disco que le corresponde a la visibilidad ingresada como parámetro.
 */
 int calcularDisco(Visibilidad* visibilidad){
     double resultado = sqrt(pow(visibilidad->u,2) + pow(visibilidad->v,2));
@@ -40,9 +40,9 @@ int calcularDisco(Visibilidad* visibilidad){
 
 /*
 ----------------imprimirDisco----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: Una estructura de tipo Disco.
+Salidas: No tiene.
+Descripción: Imprime el contenido de una estructura de tipo Disco.
 */
 void imprimirDisco(Disco* disco){
     printf("Cantidad visibilidades: %d\n",disco->cantidadVisibilidades);
@@ -56,9 +56,9 @@ void imprimirDisco(Disco* disco){
 //FUNCIONES ESTRUCTURA
 /*
 ----------------inicializarEstructura----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: No tiene.
+Salidas: No tiene.
+Descripción: Inicializa la estructura común, reservando la memoria necesaria para esta y para cada disco dentro de la estructura. 
 */
 void inicializarEstructura(){
     estructuraComun.discos = (Disco**)malloc(sizeof(Disco*)*cantidadDiscos);
@@ -72,9 +72,9 @@ void inicializarEstructura(){
 
 /*
 ----------------imprimirEstructura----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: Una Estructura Común.
+Salidas: No tiene.
+Descripción: Muestra por pantalla el contenido de la estructura común, que corresponde al contenido de todos los discos.
 */
 void imprimirEstructura(EstructuraComun estructura){
     for(int i = 0; i < cantidadDiscos;i++){
@@ -87,9 +87,9 @@ void imprimirEstructura(EstructuraComun estructura){
 
 /*
 ----------------imprimirVisualizaciones----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: Una estructura común.
+Salidas: No tiene.
+Descripción: Imprime el número de hebra y la cantidad de visibildiades que procesó.
 */
 void imprimirVisualizaciones(EstructuraComun estructura){
     for(int i = 0; i < cantidadDiscos;i++){
@@ -101,9 +101,9 @@ void imprimirVisualizaciones(EstructuraComun estructura){
 
 /*
 ----------------actualizarValorDisco----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: Un disco y un buffer.
+Salidas: No tiene.
+Descripción: Actualiza los valores del disco según el contenido del buffer. Estos son: la media real ,media imaginaria, la potencia y el ruido total.
 */
 void actualizarValorDisco(Disco* disco, Buffer* valores){
     disco->mediaReal = disco->mediaReal * disco->cantidadVisibilidades;
@@ -121,7 +121,16 @@ void actualizarValorDisco(Disco* disco, Buffer* valores){
         
     }
     disco->cantidadVisibilidades = disco->cantidadVisibilidades + valores->elementosActuales;
+    for(int i=0;i<valores->elementosActuales;i++){
+        valores->listaVisibilidad[i]->i=0;
+        valores->listaVisibilidad[i]->r=0;
+        valores->listaVisibilidad[i]->w=0;
+        valores->listaVisibilidad[i]->u=0;
+        valores->listaVisibilidad[i]->v=0;
+
+    }
     valores->elementosActuales = 0;
+    
     disco->mediaReal = disco->mediaReal/disco->cantidadVisibilidades;
     disco->mediaImaginaria = disco->mediaImaginaria/disco->cantidadVisibilidades;
     return;

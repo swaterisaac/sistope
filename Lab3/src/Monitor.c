@@ -6,14 +6,13 @@
 
 /*
 ----------------agregar----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un monitor y una visibilidad.
+Salidas: no tiene.
+Descripción: Agrega una visibilidad al monitor, o bien, la agrega al buffer del monitor.
 */
 void agregar(Monitor* monitor, Visibilidad* filaAgregar){
 
     //printf("\nElementos actuales del buffer: %d y valor del largo máximo: %d",monitor->buffer->elementosActuales,largoMaximo);
-
     if(monitor->buffer->elementosActuales == largoMaximo){
 
         //printf("Llego al max\n");
@@ -38,9 +37,9 @@ void agregar(Monitor* monitor, Visibilidad* filaAgregar){
 
 /*
 ----------------eliminar----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un monitor.
+Salidas: no tiene.
+Descripción: elimina una visiblidad del buffer del monitor.
 */
 void eliminar(Monitor* monitor){
     if(monitor->buffer->elementosActuales == 0){
@@ -59,9 +58,9 @@ void eliminar(Monitor* monitor){
 
 /*
 ----------------inicializarVisibilidad----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: no tiene.
+Salidas: una visibilidad.
+Descripción: inicializa una visibilidad, reservando la memoria necesario e iniciando en 0 todos los valores de esta.
 */
 Visibilidad* inicializarVisibilidad(){
     Visibilidad* visibilidad = (Visibilidad*)malloc(sizeof(Visibilidad));
@@ -76,9 +75,9 @@ Visibilidad* inicializarVisibilidad(){
 
 /*
 ----------------inicializarVisibilidades----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: no tiene.
+Salidas: un arreglo de visibilidades.
+Descripción: inicializa un arreglo de tipo Visibilidad, reservando la memoria necesaria e inicializando cada visibilidad.
 */
 Visibilidad** inicializarVisibilidades(){
     Visibilidad** visibilidades = (Visibilidad**)malloc(sizeof(Visibilidad*)*largoMaximo);
@@ -91,9 +90,9 @@ Visibilidad** inicializarVisibilidades(){
 
 /*
 ----------------imprimirVisibilidad----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: una visibilidad.
+Salidas: no tiene.
+Descripción: imprime por pantalla el contenido de una visibilidad.
 */
 void imprimirVisibilidad(Visibilidad* visibilidad){
     printf("%lf;%lf;%lf;%lf;%lf\n",visibilidad->u,visibilidad->v,visibilidad->r,visibilidad->i,visibilidad->w);
@@ -103,9 +102,9 @@ void imprimirVisibilidad(Visibilidad* visibilidad){
 
 /*
 ----------------inicializarBuffer----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: no tiene.
+Salidas: un buffer.
+Descripción: inicializa un buffer, reservando la memoria necesaria e inicilizando el arreglo de visibilidades dentro de este.
 */
 Buffer* inicializarBuffer(){
     Buffer* buffer = (Buffer*)malloc(sizeof(Buffer));
@@ -115,9 +114,9 @@ Buffer* inicializarBuffer(){
 }
 /*
 ----------------imprimirBuffer----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un buffer.
+Salidas: no tiene.
+Descripción: imprime el contenido de un buffer, es decir, imprime cada visibilidad.
 */
 void imprimirBuffer(Buffer* buffer){
     for(int i = 0;i < buffer->elementosActuales;i++){
@@ -129,9 +128,10 @@ void imprimirBuffer(Buffer* buffer){
 
 /*
 ----------------inicializarMonitor----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un entero que representa el índice del monitor.
+Salidas: un monitor.
+Descripción: inicializa un monitor, reservando la memoria necesaria, inicializando el buffer y 
+asignando los valores correspondientes a los datos de la estructura. Además se inicializan las variables de condición y los mutex.
 */
 Monitor* inicializarMonitor(int index){
     Monitor* monitor = (Monitor*)malloc(sizeof(Monitor));
@@ -150,9 +150,9 @@ Monitor* inicializarMonitor(int index){
 
 /*
 ----------------inicializarMonitores----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: no tiene.
+Salidas: un arreglo de tipo Monitor.
+Descripción: iniciliza los monitores, reservando la memoria necesaria para el arreglo e iniciando cada monitor dentro de dicho arreglo.
 */
 Monitor** inicializarMonitores(){
     Monitor** monitores = (Monitor**)malloc(sizeof(Monitor*)*cantidadDiscos);
@@ -165,9 +165,9 @@ Monitor** inicializarMonitores(){
 
 /*
 ----------------vaciarBuffer----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un monitor y un buffer auxiliar.
+Salidas: no tiene.
+Descripción: elimina el contenido del buffer pero los copia en un buffer auxiliar, para poder hacer los cálculos.
 */
 void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
     int cantidadElementosMonitor = monitor->buffer->elementosActuales;
@@ -213,9 +213,9 @@ void vaciarBuffer(Monitor* monitor, Buffer* bufferAux){
 
 /*
 ----------------calcularVisibilidad----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un monitor.
+Salidas: no tiene.
+Descripción: las hebras vacían su buffer y hacen los cálculos una vez que el buffer esté lleno, 
 */
 void* calcularVisibilidad(void* monitor){
     Buffer* bufferAux = inicializarBuffer();
@@ -241,4 +241,50 @@ void* calcularVisibilidad(void* monitor){
 
     }
     return NULL;
+}
+
+
+/*----------------inicializarHebras----------------
+Entradas: un arreglo de tipo Monitor.
+Salidas: un arreglo de hebras.
+Descripción: crea las hebras para que calculen la visibilidad del monitor que les corresponda.
+*/
+
+pthread_t* inicializarHebras(Monitor** monitores){
+    pthread_t* arregloHebras = (pthread_t*)malloc(sizeof(pthread_t)*cantidadDiscos);
+    for(int i = 0; i < cantidadDiscos;i++){
+        //pthread_t aux;
+        //arregloHebras[i] = aux;
+        pthread_create(&arregloHebras[i],NULL,calcularVisibilidad,(void*)monitores[i]);
+    }
+    /*for(int i = 0; i < cantidadDiscos;i++){
+        pthread_create(&arregloHebras[i],NULL,calcularVisibilidad,(void*)monitores[i]);
+    }*/
+    return arregloHebras;
+}
+
+/*
+----------------terminoLectura----------------
+Entradas: un arreglo de monitores y un arreglo de hebras.
+Salidas: no tiene.
+Descripción: función para indicar que se terminó de leer el archivo, por ende se envía una señal a cada buffer indicando que están llenos y no hay
+más datos para que deje de trabajar.
+*/
+
+void terminoLectura(Monitor** monitores,pthread_t* hebras){
+    for(int i = 0; i < cantidadDiscos;i++){
+        pthread_cond_signal(&monitores[i]->bufferLleno);
+        monitores[i]->trabajando = 0;
+    }
+    for(int i = 0; i < cantidadDiscos;i++){
+        pthread_join(hebras[i],NULL);
+    }
+    //Despues de esperar, se deben liberar los monitores y las hebras.
+    for(int i = 0 ; i < cantidadDiscos;i++){
+        free(monitores[i]->buffer);
+        free(monitores[i]);
+    }
+    free(monitores);
+    free(hebras);
+    return;
 }

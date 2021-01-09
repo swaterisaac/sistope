@@ -19,7 +19,7 @@ void imprimirError(char *argv[]){
 //Entradas: Recibe 
 //argc: que consiste en el contador de argumentos ingresados en la linea de comandos. El nombre del programa que se ejecuta se cuenta como un argumento
 //argv: arreglo con las entradas ingresadas por linea de comandos
-//**nombreArchivo, **salida, *cantidadNiveles, *cantidadBins: punteros a variables que se utilizarán para pasar valores por referencia
+//**nombreArchivo, **salida, *ancho, *cantDiscos, *tamBuffer y *flag: punteros a variables que se utilizarán para pasar valores por referencia
 //Salida: No posee retorno, ya que es una función void.
 void recibirArgumentos(int argc, char *argv[], char **nombreArchivo, char **salida, int *ancho, int *cantDiscos, int *tamBuffer, int *flag){
     int opt;

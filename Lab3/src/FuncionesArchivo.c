@@ -1,47 +1,18 @@
-#define MAIN_FILE
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-#include <math.h>
 #include "../incl/Estructuras.h"
 #include "../incl/Monitor.h"
 #include "../incl/EstructuraComun.h"
-#include "../incl/Getopt.h"
 #include "../incl/shared.h"
-
 //Ya que los archivos csv siempre van a tener una cantidad fija de columnas.
 #define COLUMNAS 5
-
-/*
-//Variables globales que están en shared.h
-int largoMaximo, cantidadDiscos,anchoDisco;
-EstructuraComun estructuraComun;
-*/
-/*
-----------------inicializarHebras----------------
-Entradas:
-Salidas:
-Descripción:
-*/
-pthread_t* inicializarHebras(Monitor** monitores){
-    pthread_t* arregloHebras = (pthread_t*)malloc(sizeof(pthread_t)*cantidadDiscos);
-    for(int i = 0; i < cantidadDiscos;i++){
-        //pthread_t aux;
-        //arregloHebras[i] = aux;
-        pthread_create(&arregloHebras[i],NULL,calcularVisibilidad,(void*)monitores[i]);
-    }
-    /*for(int i = 0; i < cantidadDiscos;i++){
-        pthread_create(&arregloHebras[i],NULL,calcularVisibilidad,(void*)monitores[i]);
-    }*/
-    return arregloHebras;
-}
-
 /*
 ----------------obtenerLineas----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: un archivo.
+Salidas: un entero que representa la cantidad de líneas que posee el archivo.
+Descripción: obtiene la cantidad de líneas que posee el archivo ingresado.
 */
 int obtenerLineas(FILE *archivo){
     int contador = 0;
@@ -55,37 +26,12 @@ int obtenerLineas(FILE *archivo){
     return lineas;
 }
 
-/*
-----------------terminoLectura----------------
-Entradas:
-Salidas:
-Descripción:
-*/
-
-void terminoLectura(Monitor** monitores,pthread_t* hebras){
-    for(int i = 0; i < cantidadDiscos;i++){
-        pthread_cond_signal(&monitores[i]->bufferLleno);
-        monitores[i]->trabajando = 0;
-    }
-    for(int i = 0; i < cantidadDiscos;i++){
-        pthread_join(hebras[i],NULL);
-    }
-    //Despues de esperar, se deben liberar los monitores y las hebras.
-    for(int i = 0 ; i < cantidadDiscos;i++){
-        free(monitores[i]->buffer);
-        free(monitores[i]);
-    }
-    free(monitores);
-    free(hebras);
-    return;
-}
-
 
 /*
 ----------------escribirArchivo----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: nombre del archivo de salida.
+Salidas: no tiene.
+Descripción: escribe los datos correspondientes de la estructura común en el archivo de salida.
 */
 void escribirArchivo(char* nombreArchivo){
     FILE* archivo = fopen(nombreArchivo,"w");
@@ -104,9 +50,9 @@ void escribirArchivo(char* nombreArchivo){
 
 /*
 ----------------leerArchivo----------------
-Entradas:
-Salidas:
-Descripción:
+Entradas: nombre del archivo de entrada.
+Salidas: no tiene.
+Descripción: lee el archivo de entrada y asigna cada línea (visibilidad) al buffer del monitor que le corresponda.
 */
 void leerArchivo(char* nombreArchivo){
     //Inicializamos un arreglo de monitores de largo Ndiscos
@@ -179,37 +125,3 @@ void leerArchivo(char* nombreArchivo){
     terminoLectura(monitores,arregloHebras);
     return;
 }
-
-
-
-int main(int argc, char *argv[]){
-    //Argumentos a recibir por línea de comandos (esto será parte del getopt)
-    char* archivoEntrada; 
-    char* archivoSalida;
-    int flag;
-
-    recibirArgumentos(argc, argv, &archivoEntrada, &archivoSalida, &anchoDisco, &cantidadDiscos, &largoMaximo, &flag);
-    printf("El argumento de flag -i es: %s\n", archivoEntrada);
-    printf("El argumento de flag -o es: %s\n", archivoSalida);
-    printf("El argumento de flag -d es: %d\n", anchoDisco);
-    printf("El argumento de flag -n es: %d\n", cantidadDiscos);
-    printf("El argumento de flag -s es: %d\n", largoMaximo);
-
-    inicializarEstructura();
-    
-    /*cantidadDiscos = 4;
-    anchoDisco = 100;
-    largoMaximo = 100;
-    */
-    
-    leerArchivo(archivoEntrada);
-    escribirArchivo(archivoSalida);
-    
-    if(flag == 1){
-        printf("\nMOSTRANDO RESULTADOS\n");
-        imprimirVisualizaciones(estructuraComun);
-    }
-    
-    return 0;
-}
-

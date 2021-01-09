@@ -1,7 +1,7 @@
 salida_out = lab3
 
-salida_headers = ./incl/EstructuraComun.h ./incl/Getopt.h ./incl/Monitor.h ./incl/shared.h
-salida_source  = $(./incl/salida_headers:.h=.c) ./src/EstructuraComun.c ./src/Getopt.c ./src/Monitor.c ./src/lab3.c
+salida_headers = ./incl/EstructuraComun.h ./incl/Getopt.h ./incl/Monitor.h ./incl/shared.h ./incl/FuncionesArchivo.h
+salida_source  = $(./incl/salida_headers:.h=.c) ./src/EstructuraComun.c ./src/Getopt.c ./src/Monitor.c ./src/FuncionesArchivo.c ./src/main.c
 salida_objects = $(salida_source:.c=.o)
 
 CC     = gcc
